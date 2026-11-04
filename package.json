@@ -1,0 +1,23 @@
+{
+  "name": "mini-realms",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "RPG de supervivencia 2D de mundo abierto (Phaser 3) inspirado en la progresión de WoW, con estética chibi.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:single": "vite build --mode single",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "phaser": "^3.80.1"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0",
+    "vite-plugin-singlefile": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
