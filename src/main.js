@@ -1,24 +1,7 @@
-import Phaser from 'phaser';
-import './ui/styles.css';
-import { BootScene } from './scenes/BootScene.js';
-import { GameScene } from './scenes/GameScene.js';
+import { Game } from './game.js';
+import { UI } from './ui.js';
 
-const game = new Phaser.Game({
-  type: Phaser.AUTO,
-  parent: 'game',
-  backgroundColor: '#1f5f9e',
-  scale: {
-    mode: Phaser.Scale.RESIZE,
-    width: window.innerWidth,
-    height: window.innerHeight,
-  },
-  physics: {
-    default: 'arcade',
-    arcade: { debug: false },
-  },
-  render: { antialias: true, roundPixels: true },
-  scene: [BootScene, GameScene],
-});
-
-// Útil para depurar desde la consola del navegador: __game.scene.keys.Game.state
-window.__game = game;
+const ui = new UI(document.getElementById('ui'));
+const game = new Game(document.getElementById('app'), ui);
+window.__game = game; // útil para depurar desde la consola
+ui.showStart((s) => game.start(s));
