@@ -3,6 +3,9 @@ import { mulberry32 } from '../world/noise.js';
 import { DUNGEON_TIERS } from '../data/dungeons.js';
 import { generateCharacterTextures } from './characters.js';
 import { generateSpectreTextures } from './spectres.js';
+import { generateVillageTextures } from './village.js';
+import { generateVillagerTextures } from './characters.js';
+import { NPCS } from '../data/quests.js';
 
 /** Mezcla un color '#rrggbb' con otro (t = 0..1). */
 function mix(a, b, t) {
@@ -63,6 +66,8 @@ function register(scene, key, canvas) {
 export function generateTextures(scene) {
   tileset(scene);
   generateCharacterTextures(scene);   // personaje jugador (gfx/characters.js)
+  generateVillagerTextures(scene, NPCS);   // aldeanos de Albor
+  generateVillageTextures(scene);     // casas y decorado del pueblo
   generateSpectreTextures(scene);     // espectros del ejército del Mago (gfx/spectres.js)
   mobs(scene);
   trees(scene);

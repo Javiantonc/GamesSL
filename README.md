@@ -14,14 +14,26 @@ npm run build:single   # todo el juego en un único dist-single/index.html
 ```
 
 
-## Desplegar en Vercel
+## 🏘️ Pueblo de Albor y misiones (novedad)
 
-1. Entra en [vercel.com/new](https://vercel.com/new) e importa este repositorio (`Javiantonc/GamesSL`).
-2. Vercel detecta Vite solo (también está fijado en `vercel.json`): *Build Command* `npm run build`, *Output Directory* `dist`.
-3. Pulsa **Deploy**. Cada `git push` a `main` redespliega automáticamente.
-4. Comparte con tus compañeros la URL `https://<proyecto>.vercel.app`.
+En el Claro del Inicio está ahora el **pueblo de Albor**: casas, puestos, pozo, posada y ocho personajes con los que puedes hablar (tecla **E**/**F**, clic o el botón ✋ en el móvil).
 
-Alternativa sin Vercel: `npm run build:single` genera `dist-single/index.html`, un único fichero que se puede enviar y abrir con doble clic.
+- **`!` amarilla** sobre un NPC: tiene una misión para ti. **`?`**: puedes entregarle una misión. **`…`**: misión en curso.
+- **17 misiones**: matar monstruos (limos, goblins, lobos, esqueletos), recoger materiales (gelatina, tela, carne, hueso, pieles), completar mazmorras concretas o un número de ellas, y derrotar a la Reina Araña del Bosque Invernal.
+- Recompensas: XP, oro, pociones y equipo de la rareza indicada.
+- **Servicios**: Tobías abre la tienda, Brunilda la forja, Marta te deja comer y descansar gratis y el Maestro Orvin te enseña la lista de los 10 portales.
+- **L**: registro de misiones. A la derecha de la pantalla aparece el rastreador con el progreso.
+
+| NPC | Papel |
+|---|---|
+| Capitana Elara | Guardia: primeras misiones |
+| Maestro Orvin | Portales y mazmorras |
+| Tobías | Mercader (tienda) |
+| Brunilda | Herrera (forja) |
+| Marta | Posadera (descanso) |
+| Lía | Guardabosques: lobos |
+| Darío | Explorador: esqueletos y mazmorras |
+| Vigía Nieve | Bosque Invernal |
 
 ## Controles
 
@@ -132,6 +144,32 @@ Los monstruos sueltan **oro** al morir (×3 los élites, ×25 los jefes). Se gas
 - Tipos nuevos de habilidad: `buff` (Frenesí, Poder Arcano, Muro de Escudos, Bendición), `hot` (Renovar)
   y `taunt` (Grito Desafiante).
 
+## 📱 Móvil y app instalable (PWA)
+
+**En ordenador el juego se ve y se controla igual que siempre.** Al abrirlo en un dispositivo táctil se activa
+automáticamente la interfaz móvil (`ui/device.js` y `ui/MobileControls.js`). Para probarla en el PC, añade `?movil=1` a la URL.
+
+| Móvil | Acción |
+|---|---|
+| Joystick (izquierda) | Moverse |
+| Botón rojo grande ⚔️ (derecha) | Ataque básico (apunta solo al enemigo más cercano) |
+| 8 botones en arco alrededor del ataque | Habilidades de las ranuras 2-9, con reutilización y rango visibles |
+| 🎯 / ✋ | Siguiente objetivo / usar portal o talar |
+| Tocar un monstruo | Seleccionarlo como objetivo |
+| Tablet → ✨ Habilidades: tocar un icono y luego un botón del arco | Colocar o cambiar una habilidad |
+| Tablet → 🎒 Objetos: tocar / mantener pulsado | Usar o equipar / ver detalles |
+
+La interfaz se reduce para caber en pantalla y las ventanas se escalan solas. Si pones el móvil en vertical, aparece un aviso para girarlo.
+Al empezar, el juego intenta ponerse en pantalla completa y en horizontal.
+
+**PWA:** `public/manifest.webmanifest` (nombre, iconos, pantalla completa, horizontal), `public/sw.js` (caché para jugar
+sin conexión) e `public/icons/` (iconos hechos con el arte del juego). En Android, Chrome o Edge aparece el botón
+**📲 Instalar como app** en la pantalla de inicio. En iPhone, Safari muestra cómo hacerlo (Compartir → Añadir a pantalla de inicio).
+
+Para que se pueda instalar, la carpeta `dist/` (`npm run build`) tiene que estar publicada en **HTTPS**, por ejemplo en
+Vercel, Netlify o GitHub Pages. Abrir el archivo directamente no permite instalarla.
+Si algún día quieres publicarla en Google Play o la App Store, se puede envolver con **Capacitor** (`npx cap add android`) sin cambiar el juego.
+
 ## Arquitectura
 
 ```
@@ -177,7 +215,9 @@ src/
 │   ├── BootScene.js        Genera o carga las texturas
 │   └── GameScene.js        Mundo, entrada, objetivo, bucle principal, muerte y reaparición
 └── ui/                     ← INTERFAZ EN HTML/CSS POR ENCIMA DEL CANVAS
-    ├── UIManager.js        Monta la UI, micro-menú y retratos del personaje
+    ├── UIManager.js        Monta la UI, micro-menú, retratos, modo móvil e instalación PWA
+    ├── device.js           Detección táctil y gestos (tocar = usar, mantener = detalles)
+    ├── MobileControls.js   Joystick + botón de ataque + habilidades en arco a la derecha
     ├── HUD.js              Marcos de jugador y objetivo, XP, mensajes, botín, banner de nivel
     ├── ActionBarUI.js      Barra de acción + barrido de cooldown (conic-gradient)
     ├── TabletUI.js         Tablet con 4 apps: Clase, Atributos, Habilidades, Objetos
@@ -206,7 +246,7 @@ src/
 - Poder de ataque = Poder × 1,2 + Agilidad × 0,5 · Poder con hechizos = Magia × 1,1
 - Daño = (base + ap × PA + sp × PH + weapon × DañoArma) × rango × bonos (±10 %, crítico ×1,75)
 - Reducción de daño = Armadura / (Armadura + 80 + nivel × 15), máximo 75 %
-- XP para subir = 70 × nivel^1,45 · los monstruos 6 o más niveles por debajo no dan XP
+- XP para subir = 80 × nivel^1,6 · los monstruos 6 o más niveles por debajo no dan XP
 
 ## Personaje por clase
 

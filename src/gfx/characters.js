@@ -502,3 +502,68 @@ export function drawCharacter(scene, state, canvas, { headOnly = false, scale = 
   }
   ctx.restore();
 }
+
+// ============================================================
+//  ALDEANOS (NPCs del pueblo de Albor): mismo estilo chibi que
+//  el héroe, pero en una sola textura por NPC. Lienzo 64x104,
+//  pies en la parte inferior. Se muestran a escala 1/RES.
+// ============================================================
+const NW = 64, NH = 118;
+function villagerItem(x, kind) {
+  const wood = '#8a5a32';
+  if (kind === 'staff') { strap(x, [[53, 100], [53, 30]], wood, 3); ell(x, 53, 27, 5.5, 5.5, '#8fe6ff'); ell(x, 51.5, 25.5, 1.8, 1.8, '#ffffff', 0); }
+  else if (kind === 'spear') { strap(x, [[53, 100], [53, 22]], wood, 2.6); poly(x, [[53, 8], [57.5, 22], [48.5, 22]], '#d6dce6'); }
+  else if (kind === 'hammer') { strap(x, [[52, 86], [52, 62]], wood, 3); rrect(x, 44, 55, 16, 9, 2, '#8e95a3'); }
+  else if (kind === 'bag') { ell(x, 53, 86, 7.5, 8, '#c9a46a'); line(x, [[49, 79], [57, 79]], OUT, 1.6); }
+  else if (kind === 'mug') { rrect(x, 47, 74, 10, 12, 2, '#d9a95a'); ell(x, 52, 74.5, 5, 2, '#fff8e0', 1.2); shape(x, (k) => { k.arc(58, 80, 3.5, -1.4, 1.4); }, null, 1.8); }
+  else if (kind === 'bow') { x.beginPath(); x.arc(46, 70, 22, -1.0, 1.0); x.lineWidth = 4.5; x.strokeStyle = OUT; x.stroke(); x.lineWidth = 2.5; x.strokeStyle = wood; x.stroke(); line(x, [[57.8, 52], [57.8, 88]], '#f4efe0', 1); }
+  else if (kind === 'map') { rrect(x, 44, 72, 16, 12, 2, '#f1e3c0'); line(x, [[47, 76], [56, 80]], '#c0392b', 1.4); }
+}
+function villager(scene, key, L) {
+  const [c, x] = mk(NW, NH);
+  x.translate(0, 14);                                          // margen para sombreros altos
+  const top = L.top, trim = L.trim;
+  if (L.cape) poly(x, [[18, 58], [46, 58], [52, 96], [12, 96]], L.cape);
+  // piernas / botas
+  if (!L.robe) { rrect(x, 21, 82, 9, 14, 3, '#4a3e36'); rrect(x, 34, 82, 9, 14, 3, '#4a3e36'); }
+  ell(x, 25, 98, 7, 4.5, '#3a2a20'); ell(x, 39, 98, 7, 4.5, '#3a2a20');
+  // cuerpo
+  if (L.robe) poly(x, [[19, 56], [45, 56], [50, 96], [14, 96]], top);
+  else poly(x, [[19, 56], [45, 56], [47, 86], [17, 86]], top);
+  if (L.apron) rrect(x, 24, 64, 16, L.robe ? 28 : 21, 3, L.apron, 1.8);
+  rrect(x, 18, 71, 28, 5, 2, trim, 1.8);                       // cinturón
+  poly(x, [[25, 56], [39, 56], [32, 63]], trim, 1.6);         // cuello
+  // brazos y manos
+  ell(x, 14.5, 68, 5.5, 10, top); ell(x, 49.5, 68, 5.5, 10, top);
+  ell(x, 14, 79, 4.4, 4.4, L.skin); ell(x, 50, 79, 4.4, 4.4, L.skin);
+  villagerItem(x, L.item);
+  // cabeza (la cara común está en CY=54: la subimos 14 px)
+  x.save(); x.translate(0, -14);
+  if (L.hat === 'hood') ell(x, CX, CY - 1, 22.5, 21.5, L.hatColor);
+  else ell(x, CX, CY - 3, 20, 19, L.hair);                     // pelo de atrás
+  face(x, '#5a3a22');
+  if (L.hat !== 'hood' && L.hat !== 'helm') shape(x, (k) => k.ellipse(CX, CY - 7, 18.8, 11.5, 0, Math.PI, 0), L.hair, 2.2);   // flequillo
+  if (L.beard) shape(x, (k) => { k.moveTo(CX - 12, CY + 9); k.quadraticCurveTo(CX, CY + 30, CX + 12, CY + 9); k.quadraticCurveTo(CX, CY + 15, CX - 12, CY + 9); }, L.beard, 2);
+  if (L.hat === 'helm') {
+    shape(x, (k) => k.ellipse(CX, CY - 4, 20, 17, 0, Math.PI, 0), L.hatColor, 2.4);
+    rrect(x, CX - 20, CY - 7, 40, 6, 2, '#e0b85a', 2);
+    ell(x, CX, CY - 25, 4, 7, '#d23b3b', 2);
+  } else if (L.hat === 'wizard') {
+    poly(x, [[CX - 19, CY - 9], [CX + 19, CY - 9], [CX + 6, CY - 50]], L.hatColor, 2.4);
+    ell(x, CX, CY - 9, 25, 5.5, L.hatColor, 2.4);
+    ell(x, CX + 3, CY - 24, 3, 3, '#ffd34d', 1.4);
+  } else if (L.hat === 'cap') {
+    shape(x, (k) => k.ellipse(CX, CY - 8, 19, 12, 0, Math.PI, 0), L.hatColor, 2.2);
+    ell(x, CX + 9, CY - 8, 12, 3.4, L.hatColor, 2);
+  } else if (L.hat === 'hood') {
+    shape(x, (k) => k.ellipse(CX, CY - 8, 19.5, 12, 0, Math.PI, 0), L.hatColor, 2.2);
+  } else if (L.hat === 'bun') {
+    ell(x, CX, CY - 22, 7.5, 6.5, L.hair, 2.2);
+  }
+  x.restore();
+  register(scene, key, c);
+}
+/** Genera una textura por NPC: npc_<id>. */
+export function generateVillagerTextures(scene, npcs) {
+  for (const [id, n] of Object.entries(npcs)) villager(scene, `npc_${id}`, n.look);
+}

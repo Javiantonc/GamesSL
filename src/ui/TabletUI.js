@@ -1,4 +1,5 @@
 import { el, itemSlotEl, makeDraggable, makeDropTarget } from './dom.js';
+import { IS_MOBILE, bindUse, bindTap } from './device.js';
 import { CLASSES, ATTRIBUTES, ATTR_PER_POINT } from '../data/classes.js';
 import { ABILITIES, MAX_RANK, RANK_POWER, rankPower, rankCooldown } from '../data/abilities.js';
 import { bus } from '../core/EventBus.js';
@@ -174,7 +175,7 @@ export class TabletUI {
   renderSkills() {
     const st = this.state;
     const s = st.stats;
-    const head = el('div', 'app-head', `<h2>✨ Habilidades</h2><p>Puntos de habilidad: <b class="big-pts">${st.skillPoints}</b> · arrastra un icono a tu barra de acción</p>`);
+    const head = el('div', 'app-head', `<h2>✨ Habilidades</h2><p>Puntos de habilidad: <b class="big-pts">${st.skillPoints}</b> · ${IS_MOBILE ? 'toca un icono y luego un botón de la derecha para colocarla' : 'arrastra un icono a tu barra de acción'}</p>`);
     this.appEl.append(head);
     if (!st.classId) {
       const n = el('div', 'notice', 'Todavía no tienes clase. Elige una para desbloquear sus habilidades.');
@@ -189,9 +190,20 @@ export class TabletUI {
       const rank = st.rank(ab.id);
       const row = el('div', `skill-row ${known ? '' : 'locked'}`);
       const icon = el('div', 'slot skill-icon', `<span class="icon">${ab.icon}</span>${known ? `<span class="rank-badge">${rank}</span>` : ''}`);
-      if (known) makeDraggable(icon, () => ({ src: 'spell', id: ab.id }));
-      icon.addEventListener('mouseenter', (e) => this.ui.tooltip.showAbility(ab, e, known));
-      icon.addEventListener('mouseleave', () => this.ui.tooltip.hide());
+      const tipA = { show: (e) => this.ui.tooltip.showAbility(ab, e, known), hide: () => this.ui.tooltip.hide() };
+      if (IS_MOBILE) {
+        // Móvil: tocar el icono -> colocarlo en un botón del arco de habilidades
+        bindTap(icon, () => {
+          if (!known) return bus.emit('ui:error', `Se aprende a nivel ${ab.unlockLevel}`);
+          if (ab.id === 'strike') return bus.emit('ui:toast', '⚔️ El ataque básico es el botón grande', '#ffe14d');
+          this.close();
+          this.ui.mobile.beginAssign(ab.id);
+        }, tipA);
+      } else {
+        if (known) makeDraggable(icon, () => ({ src: 'spell', id: ab.id }));
+        icon.addEventListener('mouseenter', tipA.show);
+        icon.addEventListener('mouseleave', tipA.hide);
+      }
 
       const pips = Array.from({ length: MAX_RANK }, (_, i) => `<i class="${i < rank && known ? 'on' : ''}"></i>`).join('');
       const cd = rankCooldown(ab, rank);
@@ -325,15 +337,17 @@ export class TabletUI {
     const st = this.state;
     const inv = st.inventory;
     const tt = this.ui.tooltip;
-    this.appEl.append(el('div', 'app-head', `<h2>🎒 Objetos</h2><p>${inv.usedCount()} / ${inv.size} ranuras · clic derecho para usar o equipar</p>`));
+    this.appEl.append(el('div', 'app-head', `<h2>🎒 Objetos</h2><p>${inv.usedCount()} / ${inv.size} ranuras · ${IS_MOBILE ? 'toca para usar o equipar · mantén pulsado para ver detalles' : 'clic derecho para usar o equipar'}</p>`));
     const grid = el('div', 'bag-grid');
     inv.slots.forEach((item, i) => {
       const s = itemSlotEl(item);
       if (item) {
-        makeDraggable(s, () => ({ src: 'bag', index: i }));
-        s.addEventListener('contextmenu', (e) => { e.preventDefault(); tt.hide(); st.useFromBag(i); });
-        s.addEventListener('mouseenter', (e) => tt.showItem(item, e, { hint: item.type === 'equipment' ? 'Clic derecho: equipar' : item.type === 'material' ? '' : 'Clic derecho: usar' }));
-        s.addEventListener('mouseleave', () => tt.hide());
+        if (!IS_MOBILE) makeDraggable(s, () => ({ src: 'bag', index: i }));
+        const verb = IS_MOBILE ? 'Toca' : 'Clic derecho';
+        bindUse(s, () => st.useFromBag(i), {
+          show: (e) => tt.showItem(item, e, { hint: item.type === 'equipment' ? `${verb}: equipar` : item.type === 'material' ? '' : `${verb}: usar` }),
+          hide: () => tt.hide(),
+        });
       }
       makeDropTarget(s, (p) => p.src === 'bag' || p.src === 'equip', (p) => {
         if (p.src === 'bag') inv.move(p.index, i);

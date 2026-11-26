@@ -321,3 +321,107 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #10182a; fon
 .army-unit span { font-size: 17px; filter: drop-shadow(0 0 3px #3fd8bd); }
 .army-unit i { width: 26px; height: 4px; border-radius: 2px; background: #140c22; overflow: hidden; }
 .army-unit i b { display: block; height: 100%; background: #5ff2d6; }
+
+/* =========================================================
+   MÓVIL (body.mobile): joystick, botones a la derecha, UI compacta.
+   En ordenador no se aplica nada de esta sección.
+   ========================================================= */
+body.mobile, body.mobile #game { touch-action: none; overscroll-behavior: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.mobile #ui { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+.mobile .actionbar, .mobile .help, .mobile .loot-log { display: none; }
+
+.mobile .player-frame { top: 6px; left: 6px; transform: scale(.6); transform-origin: top left; }
+.mobile .target-frame { top: 6px; left: 194px; transform: scale(.6); transform-origin: top left; }
+.mobile .gold-pill { top: 66px; left: 6px; transform: scale(.8); transform-origin: top left; }
+.mobile .buffs { top: 94px; left: 8px; transform: scale(.75); transform-origin: top left; }
+.mobile .army-panel { top: 130px; left: 6px; transform: scale(.68); transform-origin: top left; }
+.mobile .minimap { top: 4px; right: 4px; transform: scale(.52); transform-origin: top right; }
+.mobile .bottom { inset: 0; transform: none; left: 0; pointer-events: none; display: block; }
+.mobile .xpbar { position: absolute; left: 50%; bottom: 5px; transform: translateX(-50%); width: min(34vw, 300px); height: 11px; pointer-events: none; }
+.mobile .xpbar span { font-size: 8px; line-height: 8px; }
+.mobile .micro { position: absolute; top: 8px; right: calc(104px + env(safe-area-inset-right)); bottom: auto; gap: 8px; pointer-events: auto; }
+.mobile .micro-btn { width: 40px; height: 40px; font-size: 20px; }
+.mobile .error-text { top: 64px; font-size: 14px; }
+.mobile .toasts { top: 92px; transform: translateX(-50%) scale(.8); }
+.mobile .levelup-banner, .mobile .zone-banner { transform: translateX(-50%) scale(.6); }
+.mobile .levelup-banner.show, .mobile .zone-banner.show { animation-name: banner-m; }
+@keyframes banner-m { 0% { opacity: 0; } 8%, 80% { opacity: 1; } 100% { opacity: 0; } }
+.mobile .tooltip { transform: scale(.85); transform-origin: top left; }
+
+/* Ventanas centradas y escaladas para caber */
+.mobile .tablet { right: 50%; bottom: auto; top: 50%; transform: translate(50%, -50%) scale(var(--ps, 1)); z-index: 40; }
+.mobile .tablet.open { animation: none; }
+.mobile .tablet-app { touch-action: pan-y; -webkit-overflow-scrolling: touch; }
+.mobile .char-panel { left: 50%; top: 50%; transform: translate(-50%, -50%) scale(var(--ps, 1)); z-index: 41; }
+.mobile .panel.open { animation: none; }
+.mobile .start-card { transform: scale(var(--ps, 1)); }
+.mobile .start-card h1 { font-size: 44px; }
+
+/* Joystick */
+.joystick { position: absolute; left: calc(18px + env(safe-area-inset-left)); bottom: 18px; width: 150px; height: 150px; display: grid; place-items: center; touch-action: none; z-index: 20; transform: scale(var(--hs, 1)); transform-origin: bottom left; }
+.joy-base { width: 128px; height: 128px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.10), rgba(20,14,48,.45)); border: 3px solid rgba(245,197,66,.75); box-shadow: 0 0 0 2px rgba(0,0,0,.35), inset 0 0 18px rgba(0,0,0,.4); display: grid; place-items: center; }
+.joy-knob { width: 58px; height: 58px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff3c2, #f5c542 55%, #a8781a); border: 3px solid #3a2400; box-shadow: 0 4px 8px rgba(0,0,0,.45); transition: transform .06s; }
+.joystick.active .joy-knob { transition: none; }
+
+/* Botones de habilidad a la derecha (arco alrededor del ataque) */
+.skill-cluster { position: absolute; right: calc(74px + env(safe-area-inset-right)); bottom: 74px; width: 0; height: 0; z-index: 20; transform: scale(var(--hs, 1)); transform-origin: center; }
+.sk-btn { position: absolute; transform: translate(-50%, -50%); border-radius: 50%; display: grid; place-items: center; padding: 0; cursor: pointer; touch-action: none; overflow: hidden;
+  background: radial-gradient(circle at 35% 30%, #4b3f86, #1d1838); border: 3px solid var(--gold); box-shadow: 0 3px 0 var(--gold-dark), 0 6px 14px rgba(0,0,0,.45); color: #fff; font-family: var(--font); }
+.sk-btn .icon { font-size: 28px; line-height: 1; filter: drop-shadow(0 2px 0 rgba(0,0,0,.5)); position: relative; z-index: 1; }
+.sk-btn .cd { position: absolute; inset: 0; border-radius: 50%; pointer-events: none; z-index: 2; }
+.sk-btn .cdtext { position: absolute; z-index: 3; font-size: 17px; font-weight: 900; text-shadow: 0 0 4px #000, 0 0 4px #000; pointer-events: none; }
+.sk-btn .rank-badge { z-index: 3; right: 6px; bottom: 4px; }
+.sk-attack { width: 92px; height: 92px; left: 0; top: 0; background: radial-gradient(circle at 35% 30%, #ff8a6b, #c8312a 60%, #6e1414); border-width: 4px; }
+.sk-attack .icon { font-size: 44px; }
+.sk-skill { width: 56px; height: 56px; }
+.sk-skill.empty { opacity: .45; }
+.sk-skill.nomana .icon { filter: grayscale(.5) brightness(.6) sepia(1) hue-rotate(180deg) saturate(3); }
+.sk-util { width: 48px; height: 48px; background: radial-gradient(circle at 35% 30%, #5a7fd6, #1f2f66); }
+.sk-util .icon { font-size: 22px; }
+.sk-btn.pressed { animation: sk-press .18s; }
+@keyframes sk-press { 50% { transform: translate(-50%, -50%) scale(.86); filter: brightness(1.4); } }
+.skill-cluster.assigning .sk-skill { opacity: 1; animation: notify .8s infinite; border-color: #7dff6a; }
+.assign-hint { position: absolute; right: 16px; bottom: calc(300px * var(--hs, 1)); max-width: 260px; padding: 8px 12px; border-radius: 12px; background: var(--panel); border: 2px solid #7dff6a; font-weight: 800; font-size: 13px; text-align: center; z-index: 21; pointer-events: none; }
+.assign-hint.hidden { display: none; }
+
+/* Aviso para girar el móvil (en vertical) */
+.rotate-hint { display: none; position: fixed; inset: 0; z-index: 200; background: #140c2e; color: #fff; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; pointer-events: auto; }
+.rotate-hint div { font-size: 64px; animation: rot 1.6s ease-in-out infinite; }
+.rotate-hint b { font-size: 22px; color: #ffe14d; }
+@keyframes rot { 50% { transform: rotate(-90deg); } }
+@media (orientation: portrait) { .mobile .rotate-hint { display: flex; } }
+
+/* Botón de instalar la app (PWA) */
+.install-row { margin-top: 12px; }
+.install-btn { font: 800 14px var(--font); color: #fff; padding: 8px 16px; border-radius: 12px; border: 2px solid #7ec8ff; background: rgba(40, 90, 180, .55); cursor: pointer; }
+.install-btn b { color: #ffe14d; }
+
+/* ===================== Misiones y NPCs de Albor ===================== */
+.quest-tracker { position: absolute; top: 232px; right: 14px; width: 230px; pointer-events: none !important; text-shadow: 0 2px 0 #000, 0 0 5px #000; }
+.quest-tracker h4 { margin: 0 0 4px; color: var(--gold); font-size: 14px; }
+.quest-tracker div { margin-bottom: 6px; }
+.quest-tracker b { color: #ffe9a0; font-size: 13px; }
+.quest-tracker p { margin: 1px 0 0; font-size: 12px; }
+.quest-tracker .done p { color: #7dff7a; }
+.quest-panel { left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(480px, 94vw); }
+.quest-panel .panel-body, .npc-dialog .panel-body { max-height: 64vh; overflow-y: auto; }
+.npc-dialog { left: 50%; top: 52%; transform: translate(-50%, -50%); width: min(440px, 94vw); z-index: 30; }
+.npc-dialog small, .quest-panel h4 small { color: #c9bfe8; font-weight: normal; font-size: 12px; }
+.npc-dialog p { margin: 0 0 8px; line-height: 1.35; }
+.npc-dialog .greet { font-style: italic; color: #e8e0ff; }
+.qopt { display: block; width: 100%; text-align: left; font: 800 14px var(--font); color: var(--ink); background: var(--panel-2); border: 2px solid #ffffff22; border-radius: 12px; padding: 8px 10px; margin-bottom: 6px; cursor: pointer; }
+.qopt b { color: #ffd23a; font-size: 17px; margin-right: 4px; }
+.qopt.prog b { color: #cfcfcf; }
+.qopt:hover { border-color: var(--gold); }
+.services { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 6px; }
+.services .btn-main, .services .btn-ghost { margin-top: 0; }
+.qe { border-bottom: 1px solid #ffffff1f; padding-bottom: 8px; margin-bottom: 8px; }
+.qe h4 { margin: 0 0 4px; color: #ffe9a0; }
+.qe p { margin: 3px 0; font-size: 13px; }
+.obj { color: #ffd23a; } .good { color: #7dff7a; } .bad { color: #ff7b6b; } .dim { color: #c9bfe8; } .small { font-size: 12px; }
+.rw { font-size: 13px; }
+.mk { color: #ffd23a; }
+.prow { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #ffffff14; font-size: 13px; }
+.prow i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+.mobile .quest-tracker { display: none; }
+.mobile .npc-dialog, .mobile .quest-panel { transform: translate(-50%, -50%) scale(var(--ps, 1)); }

@@ -53,7 +53,8 @@ export class HUD {
     this.banner = el('div', 'levelup-banner');
     this.zoneBanner = el('div', 'zone-banner');
     this.help = el('div', 'help', `
-      <b>WASD</b> moverse · <b>Clic/Tab</b> objetivo · <b>Clic dcho.</b> atacar · <b>1-0</b> habilidades · <b>E</b> talar árbol<br>
+      <b>WASD</b> moverse · <b>Clic/Tab</b> objetivo · <b>Clic dcho.</b> atacar · <b>1-0</b> habilidades · <b>E</b> hablar / talar<br>
+      📜 Habla con los NPCs con <b style="color:#ffd23a">!</b> del pueblo de Albor para conseguir misiones · <b>L</b> registro de misiones<br>
       <b>T</b> tablet (clase, atributos, habilidades, objetos) · <b>C</b> personaje y equipo<br>
       <b>E</b> junto a un <b>portal</b>: mazmorra · <b>O</b> tienda · ❄️ Bosque Invernal: completa las 10 mazmorras`);
     root.append(this.errorEl, this.toasts, this.lootLog, this.banner, this.zoneBanner, this.help);

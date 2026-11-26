@@ -220,6 +220,7 @@ export class CombatSystem {
 
   killMob(mob) {
     mob.die();
+    bus.emit('mob:killed', mob);
     this.scene.army.onMobKilled(mob);
     const xp = xpFromMob(mob.level, this.state.level, mob.elite);
     if (xp > 0) this.float(mob.x, mob.y - 40, `+${xp} XP`, '#c88bff', 16);

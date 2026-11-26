@@ -11,6 +11,8 @@ import { Player } from '../entities/Player.js';
 import { Mob } from '../entities/Mob.js';
 import { MOBS } from '../data/mobs.js';
 import { UIManager } from '../ui/UIManager.js';
+import { Village } from '../world/Village.js';
+import { QuestLog } from '../systems/QuestLog.js';
 import { bus } from '../core/EventBus.js';
 
 /**
@@ -56,9 +58,10 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.mobGroup, this.ground);
     this.physics.add.collider(this.mobGroup, this.trees.group);
     this.dungeons = new DungeonManager(this);   // portales + mazmorras (añade sus mobs a this.mobs)
+    this.village = new Village(this);           // pueblo de Albor con NPCs y misiones
 
     // Culling: solo se dibujan los objetos decorativos cercanos a la cámara (gran mejora de FPS)
-    this.cullList = [...this.trees.list, ...this.dungeons.decor];
+    this.cullList = [...this.trees.list, ...this.dungeons.decor, ...this.village.decor];
     this.nextCull = 0;
 
     // ---------- Ejército de sombras (Mago nivel 50+) ----------
@@ -72,8 +75,10 @@ export class GameScene extends Phaser.Scene {
     this.loot = new LootSystem(this);
     this.targetRing = this.add.image(0, 0, 'target_ring').setVisible(false);
 
+    this.quests = new QuestLog(this);
     this.setupInput();
     this.ui = new UIManager(this);
+    this.village.refreshMarkers();
 
     bus.on('player:levelup', ({ level }) => this.levelUpFx(level));
     this.events.once('shutdown', () => bus.removeAllListeners());
@@ -97,7 +102,8 @@ export class GameScene extends Phaser.Scene {
       if (e.repeat) return;
       switch (code) {
         case 'Tab': e.preventDefault(); this.cycleTarget(); break;
-        case 'KeyE': if (!this.dungeons.tryUse(this.player)) this.trees.tryChop(this.player); break;
+        case 'KeyE': case 'KeyF': this.interact(); break;
+        case 'KeyL': case 'KeyJ': this.ui.toggle('quests'); break;
         case 'KeyT': this.ui.toggle('tablet'); break;
         case 'KeyB': case 'KeyI': this.ui.toggle('tablet', 'items'); break;
         case 'KeyP': case 'KeyK': this.ui.toggle('tablet', 'skills'); break;
@@ -108,6 +114,12 @@ export class GameScene extends Phaser.Scene {
     });
 
     this.input.on('pointerdown', (p) => {
+      const npc = !this.dungeons.current && this.village.npcAt(p.worldX, p.worldY);
+      if (npc) {
+        if (Math.hypot(npc.x - this.player.x, npc.y - this.player.y) < 150) this.ui.questUI.openNpc(npc.id);
+        else this.ui.hud.error(`Acércate a ${npc.d.name} para hablar`);
+        return;
+      }
       const m = this.mobAt(p.worldX, p.worldY);
       if (p.rightButtonDown()) {
         // Clic derecho = ataque básico (Golpe Heroico) sobre el monstruo
@@ -125,6 +137,12 @@ export class GameScene extends Phaser.Scene {
       if (m) m.showPlate = true;
       this.game.canvas.style.cursor = m ? 'crosshair' : 'default';
     });
+  }
+
+  /** E / F: hablar con un NPC, usar un portal o talar un árbol. */
+  interact() {
+    if (this.village.tryTalk(this.player)) return;
+    if (!this.dungeons.tryUse(this.player)) this.trees.tryChop(this.player);
   }
 
   /** Ataque básico (clic derecho). Usa la habilidad 'strike' con su GCD y alcance. */
@@ -218,8 +236,10 @@ export class GameScene extends Phaser.Scene {
     const now = performance.now();
     const dt = Math.min(delta, 50) / 1000;
     const k = this.keys;
-    const vx = (k.D.isDown || k.RIGHT.isDown ? 1 : 0) - (k.A.isDown || k.LEFT.isDown ? 1 : 0);
-    const vy = (k.S.isDown || k.DOWN.isDown ? 1 : 0) - (k.W.isDown || k.UP.isDown ? 1 : 0);
+    let vx = (k.D.isDown || k.RIGHT.isDown ? 1 : 0) - (k.A.isDown || k.LEFT.isDown ? 1 : 0);
+    let vy = (k.S.isDown || k.DOWN.isDown ? 1 : 0) - (k.W.isDown || k.UP.isDown ? 1 : 0);
+    const joy = this.ui.mobile?.vec;                 // joystick táctil (móvil)
+    if (joy && (joy.x || joy.y)) { vx = joy.x; vy = joy.y; }
     this.player.update(time, vx, vy);
 
     const p = this.player;
@@ -233,6 +253,7 @@ export class GameScene extends Phaser.Scene {
     this.loot.update(p);
     this.trees.update(now, p);
     this.dungeons.update(now, p);
+    this.village.update(now, p);
     this.dungeons.snow(now);
     this.cull(now);
 

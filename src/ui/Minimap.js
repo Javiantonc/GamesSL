@@ -76,6 +76,17 @@ export class Minimap {
       ctx.fillStyle = sh.isShadow ? '#5ff2d6' : '#c9fff4';
       ctx.beginPath(); ctx.arc(mx, my, sh.isShadow ? 2.5 : 1.8, 0, Math.PI * 2); ctx.fill();
     }
+    // NPCs del pueblo con misión (! nueva · ? para entregar)
+    if (!dgn && scene.village) {
+      ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center';
+      for (const n of scene.village.npcs) {
+        const mx = (n.x / TILE - ptx + R) * S, my = (n.y / TILE - pty + R) * S;
+        if (mx < 0 || my < 0 || mx > 170 || my > 170) continue;
+        const mk = n.mark.text;
+        if (mk === '!' || mk === '?') { ctx.lineWidth = 3; ctx.strokeStyle = '#1a1020'; ctx.strokeText(mk, mx, my + 4); ctx.fillStyle = '#ffd23a'; ctx.fillText(mk, mx, my + 4); }
+        else { ctx.fillStyle = '#7dff7a'; ctx.fillRect(mx - 1.5, my - 1.5, 3, 3); }
+      }
+    }
     // jugador: flecha
     ctx.save(); ctx.translate(85, 85);
     ctx.rotate(Math.atan2(p.moveDir.y, p.moveDir.x) + Math.PI / 2);
@@ -86,7 +97,7 @@ export class Minimap {
     const tx = Math.floor(ptx), ty = Math.floor(pty);
     const dg = scene.dungeons.current;
     const name = dg ? dg.name
-      : Math.hypot(tx - this.world.spawn.x, ty - this.world.spawn.y) < 12 ? 'Claro del Inicio' : ZONE_NAMES[this.world.biomeAt(tx, ty)];
+      : Math.hypot(tx - this.world.spawn.x, ty - this.world.spawn.y) < 13 ? 'Pueblo de Albor' : ZONE_NAMES[this.world.biomeAt(tx, ty)];
     if (this.zone.textContent !== name) {
       this.zone.textContent = name;
       this.zone.style.color = dg ? dg.color : '';

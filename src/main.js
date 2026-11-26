@@ -20,5 +20,17 @@ const game = new Phaser.Game({
   scene: [BootScene, GameScene],
 });
 
+// ---------- PWA ----------
+// Registra el service worker (solo funciona servido por http(s), no abriendo el archivo)
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+  addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+// Guarda el aviso de instalación para mostrar el botón "Instalar como app"
+addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  window.__installPrompt = e;
+  dispatchEvent(new Event('mini-realms:installable'));
+});
+
 // Útil para depurar desde la consola del navegador: __game.scene.keys.Game.state
 window.__game = game;

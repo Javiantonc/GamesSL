@@ -46,7 +46,7 @@ export function generateWorld(w, h, seed) {
       e += Math.max(0, r - 0.8) * 1.2;
       const d = Math.hypot(x - cx, y - cy) / (w / 2);
       e += Math.max(0, d - 0.9) * 4;                          // anillo de montañas en el borde
-      const spawnBlend = clamp(1 - Math.hypot(x - cx, y - cy) / 16, 0, 1);
+      const spawnBlend = clamp(1.25 - Math.hypot(x - cx, y - cy) / 18, 0, 1);
       e = lerp(e, 0.5, spawnBlend);                            // claro llano en el centro
       const m = moist.fbm(x / 30, y / 30, 4);
 
@@ -112,7 +112,7 @@ export function generateWorld(w, h, seed) {
   for (let y = 1; y < h - 1; y++) {
     for (let x = 1; x < w - 1; x++) {
       const b = biomeAt(x, y);
-      if (Math.hypot(x - cx, y - cy) < 7 || nearPortal(x, y, 3)) continue;
+      if (Math.hypot(x - cx, y - cy) < 13 || nearPortal(x, y, 3)) continue;   // el pueblo de Albor ocupa el claro
       let p = 0;
       if (b === 'forest') p = 0.24;
       else if (b === 'grass') p = 0.018;
@@ -132,7 +132,7 @@ export function generateWorld(w, h, seed) {
     const x = 2 + Math.floor(rng() * (w - 4));
     const y = 2 + Math.floor(rng() * (h - 4));
     const dist = Math.hypot(x - cx, y - cy);
-    if (dist < 11 || isBlocked(x, y) || treeSet.has(y * w + x) || nearPortal(x, y, 4)) continue;
+    if (dist < 15 || isBlocked(x, y) || treeSet.has(y * w + x) || nearPortal(x, y, 4)) continue;
     const b = biomeAt(x, y);
     const candidates = Object.values(MOBS).filter((m) => m.biomes.includes(b));
     if (!candidates.length) continue;

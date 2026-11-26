@@ -254,6 +254,7 @@ export class DungeonManager {
     d.completed = true;
     const first = !this.scene.state.dungeonsCleared.has(d.id);
     this.scene.state.dungeonsCleared.add(d.id);
+    bus.emit('dungeon:cleared', d.id);
     this.refreshWinterLabel();
     if (first && this.winterUnlocked()) {
       this.scene.time.delayedCall(4500, () => bus.emit('ui:zone', { title: '❄️ ¡Bosque Invernal desbloqueado!', sub: 'Has completado todas las mazmorras. El portal de hielo del Claro del Inicio está abierto.', color: '#bfe8ff' }));

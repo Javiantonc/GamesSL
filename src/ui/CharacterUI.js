@@ -1,5 +1,6 @@
 import { Panel } from './Panel.js';
 import { el, itemSlotEl, makeDraggable, makeDropTarget } from './dom.js';
+import { IS_MOBILE, bindUse } from './device.js';
 import { SLOTS } from '../data/items.js';
 import { DISPLAY_STATS } from '../systems/Stats.js';
 import { bus } from '../core/EventBus.js';
@@ -37,10 +38,11 @@ export class CharacterUI extends Panel {
     if (!item) s.append(el('span', 'icon ghost', SLOTS[slot].icon));
     s.append(el('span', 'slot-label', SLOTS[slot].name));
     if (item) {
-      makeDraggable(s, () => ({ src: 'equip', slot }));
-      s.addEventListener('contextmenu', (e) => { e.preventDefault(); tt.hide(); this.state.unequipToBag(slot); });
-      s.addEventListener('mouseenter', (e) => tt.showItem(item, e, { hint: 'Clic derecho: quitar', compare: false }));
-      s.addEventListener('mouseleave', () => tt.hide());
+      if (!IS_MOBILE) makeDraggable(s, () => ({ src: 'equip', slot }));
+      bindUse(s, () => this.state.unequipToBag(slot), {
+        show: (e) => tt.showItem(item, e, { hint: `${IS_MOBILE ? 'Toca' : 'Clic derecho'}: quitar`, compare: false }),
+        hide: () => tt.hide(),
+      });
     }
     makeDropTarget(s, (p) => {
       if (p.src !== 'bag') return false;

@@ -41,6 +41,7 @@ export class PlayerState {
     this.gold = START_GOLD;
     this.powers = {};             // poderes comprados en la tienda: id -> nivel
     this.scrolls = { skill: 0, attr: 0 };
+    this.quests = { active: {}, done: [] };   // misiones de Albor (ver QuestLog)
     this.dungeonsCleared = new Set();   // ids de mazmorras cuyo jefe has derrotado
 
     this.equipment.equip(starterWeapon());
@@ -392,7 +393,7 @@ export class PlayerState {
     return {
       classId: this.classId, level: this.level, xp: this.xp, hunger: this.hunger,
       allocated: this.allocated, attrPoints: this.attrPoints, skillPoints: this.skillPoints, ranks: this.ranks,
-      gold: this.gold, powers: this.powers, scrolls: this.scrolls, dungeonsCleared: [...this.dungeonsCleared],
+      gold: this.gold, powers: this.powers, scrolls: this.scrolls, dungeonsCleared: [...this.dungeonsCleared], quests: this.quests,
       inventory: this.inventory.slots, equipment: this.equipment.slots, actionBar: this.actionBar.slots,
     };
   }
