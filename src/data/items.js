@@ -1,140 +1,81 @@
-// ============================================================
-//  OBJETOS: rarezas, ranuras de equipo, generador de equipo
-//  aleatorio y consumibles/materiales apilables.
-// ============================================================
-
-export const RARITIES = {
-  common:    { name: 'Común',      color: '#e8e8e8', hex: 0xe8e8e8, mult: 1.0,  weight: 55 },
-  uncommon:  { name: 'Poco común', color: '#1eff00', hex: 0x1eff00, mult: 1.35, weight: 28 },
-  rare:      { name: 'Raro',       color: '#2e8bff', hex: 0x2e8bff, mult: 1.75, weight: 12 },
-  epic:      { name: 'Épico',      color: '#b04dff', hex: 0xb04dff, mult: 2.3,  weight: 4 },
-  legendary: { name: 'Legendario', color: '#ff8000', hex: 0xff8000, mult: 3.0,  weight: 1 },
-};
-export const RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
-
-// mult = peso de presupuesto de estadísticas de la ranura. armor = si da armadura.
-export const SLOTS = {
-  head:      { name: 'Cabeza',    icon: '🪖', mult: 1.0,  armor: true },
-  neck:      { name: 'Cuello',    icon: '📿', mult: 0.55, armor: false },
-  shoulders: { name: 'Hombros',   icon: '🧣', mult: 0.75, armor: true },
-  chest:     { name: 'Pecho',     icon: '🥋', mult: 1.0,  armor: true },
-  hands:     { name: 'Manos',     icon: '🧤', mult: 0.7,  armor: true },
-  legs:      { name: 'Piernas',   icon: '👖', mult: 0.9,  armor: true },
-  feet:      { name: 'Pies',      icon: '🥾', mult: 0.7,  armor: true },
-  ring:      { name: 'Anillo',    icon: '💍', mult: 0.55, armor: false },
-  weapon:    { name: 'Arma',      icon: '🗡️', mult: 1.0,  armor: false },
-  offhand:   { name: 'Mano izq.', icon: '🛡️', mult: 0.6,  armor: true },
-};
-
-export const STAT_NAMES = {
-  stamina: 'Resistencia',
-  strength: 'Poder',
-  intellect: 'Magia',
-  agility: 'Agilidad',
-  armor: 'Armadura',
-  weaponDmg: 'Daño de arma',
-};
-
-const BASE_NAMES = {
-  head: ['Yelmo', 'Capucha', 'Casco', 'Diadema'],
-  neck: ['Amuleto', 'Colgante', 'Talismán'],
-  shoulders: ['Hombreras', 'Espaldares', 'Manto'],
-  chest: ['Coraza', 'Túnica', 'Peto', 'Jubón'],
-  hands: ['Guanteletes', 'Guantes', 'Manoplas'],
-  legs: ['Grebas', 'Calzas', 'Pantalones'],
-  feet: ['Botas', 'Sandalias', 'Escarpes'],
-  ring: ['Anillo', 'Sortija', 'Sello'],
-  weapon: ['Espada', 'Hacha', 'Bastón', 'Maza', 'Daga'],
-  offhand: ['Escudo', 'Broquel', 'Orbe'],
-};
-const WEAPON_ICONS = { Espada: '🗡️', Hacha: '🪓', Bastón: '🪄', Maza: '🔨', Daga: '🔪', Orbe: '🔮' };
-
-// El sufijo decide en qué estadísticas se reparte el presupuesto (estilo WoW clásico)
-const SUFFIXES = [
-  { name: 'del Oso',      stats: { stamina: 0.5, strength: 0.5 } },
-  { name: 'del Águila',   stats: { stamina: 0.5, intellect: 0.5 } },
-  { name: 'del Tigre',    stats: { strength: 0.5, agility: 0.5 } },
-  { name: 'del Búho',     stats: { intellect: 0.7, stamina: 0.3 } },
-  { name: 'del Mono',     stats: { agility: 0.6, stamina: 0.4 } },
-  { name: 'del Gorila',   stats: { strength: 0.6, intellect: 0.4 } },
-  { name: 'de la Ballena', stats: { stamina: 1.0 } },
+// Objetos: equipo con rareza y atributos, consumibles y objetos de misión.
+export const RARITY = [
+  { id: 'comun', name: 'Común', color: '#e6e6e6', mult: 1 },
+  { id: 'pococomun', name: 'Poco común', color: '#4bd34b', mult: 1.25 },
+  { id: 'raro', name: 'Raro', color: '#3f8fff', mult: 1.55 },
+  { id: 'epico', name: 'Épico', color: '#b45cff', mult: 1.9 },
+  { id: 'legendario', name: 'Legendario', color: '#ff9a2b', mult: 2.4 },
 ];
-const LEGENDARY_SUFFIXES = ['del Alba Carmesí', 'de la Tormenta Eterna', 'de Valtor el Eterno', 'del Primer Dragón'];
+export const SLOTS = {
+  arma: { name: 'Arma', icon: '⚔️' },
+  cabeza: { name: 'Cabeza', icon: '⛑️' },
+  pecho: { name: 'Pecho', icon: '🦺' },
+  piernas: { name: 'Piernas', icon: '👖' },
+  botas: { name: 'Botas', icon: '🥾' },
+  abalorio: { name: 'Abalorio', icon: '💍' },
+};
+const BASES = {
+  arma: { tanque: ['Espada larga', 'Hacha de guerra', 'Espada bastarda'], asesino: ['Daga curva', 'Estilete', 'Cuchilla gemela'], mago: ['Bastón de roble', 'Vara rúnica', 'Bastón astral'], support: ['Maza bendita', 'Cetro solar', 'Martillo de luz'] },
+  cabeza: ['Capucha', 'Yelmo', 'Diadema', 'Sombrero', 'Casco'],
+  pecho: ['Túnica', 'Coraza', 'Jubón', 'Cota de malla', 'Chaleco'],
+  piernas: ['Grebas', 'Calzas', 'Pantalones', 'Faldar'],
+  botas: ['Botas', 'Sandalias', 'Escarpes', 'Botines'],
+  abalorio: ['Anillo', 'Amuleto', 'Colgante', 'Talismán'],
+};
+const SUFFIX = {
+  poder: ['del Oso', 'de la Fuerza', 'del Toro'],
+  agilidad: ['del Halcón', 'del Viento', 'del Zorro'],
+  magia: ['del Búho', 'de las Estrellas', 'del Arcano'],
+  resistencia: ['de la Tortuga', 'de la Montaña', 'del Roble'],
+};
+const MAIN_ATTR = { tanque: ['poder', 'resistencia'], asesino: ['agilidad', 'poder'], mago: ['magia', 'resistencia'], support: ['magia', 'resistencia'] };
 
-let uidCounter = 1;
-export const uid = () => `it${Date.now().toString(36)}${(uidCounter++).toString(36)}`;
-const pick = (arr, rng) => arr[Math.floor(rng() * arr.length)];
+let uid = 1;
+const pick = (a) => a[(Math.random() * a.length) | 0];
 
-/** Tira una rareza ponderada. minRarity permite garantizar un mínimo (élites). */
-export function rollRarity(rng = Math.random, minRarity = 'common') {
-  const pool = RARITY_ORDER.slice(RARITY_ORDER.indexOf(minRarity));
-  const total = pool.reduce((s, r) => s + RARITIES[r].weight, 0);
-  let roll = rng() * total;
-  for (const r of pool) {
-    roll -= RARITIES[r].weight;
-    if (roll <= 0) return r;
-  }
-  return pool[0];
+export function rollRarity(minR = 0, luck = 0) {
+  const r = Math.random() - luck;
+  let k = r < 0.01 ? 4 : r < 0.05 ? 3 : r < 0.18 ? 2 : r < 0.45 ? 1 : 0;
+  return Math.max(minR, k);
 }
 
-/**
- * Genera una pieza de equipo aleatoria.
- * @param {number} ilvl  nivel de objeto (normalmente = nivel del monstruo)
- */
-export function generateItem(ilvl, rng = Math.random, opts = {}) {
-  const slot = opts.slot || pick(Object.keys(SLOTS), rng);
-  const rarity = opts.rarity || rollRarity(rng, opts.minRarity);
-  const R = RARITIES[rarity];
-  const S = SLOTS[slot];
-  const base = pick(BASE_NAMES[slot], rng);
-  const suffix = pick(SUFFIXES, rng);
-
-  const budget = Math.max(1, Math.round((3 + ilvl * 1.5) * S.mult * R.mult));
-  const stats = {};
-  for (const [k, w] of Object.entries(suffix.stats)) stats[k] = Math.max(1, Math.round(budget * w));
-  if (S.armor) stats.armor = Math.round((ilvl * 3 + 5) * S.mult * (0.8 + R.mult * 0.4));
-  if (slot === 'weapon') stats.weaponDmg = Math.round((2 + ilvl * 1.2) * R.mult);
-
-  const name = rarity === 'legendary' ? `${base} ${pick(LEGENDARY_SUFFIXES, rng)}` : `${base} ${suffix.name}`;
-  return {
-    uid: uid(),
-    id: `gear_${slot}`,
-    type: 'equipment',
-    name,
-    slot,
-    rarity,
-    ilvl,
-    reqLevel: Math.min(80, Math.max(1, ilvl - 2)),   // el Bosque Invernal da ilvl > 80 equipable a nivel 80
-    icon: WEAPON_ICONS[base] || S.icon,
-    stats,
-    maxStack: 1,
-    qty: 1,
+/** Genera una pieza de equipo para la clase cls. */
+export function makeItem(level, rarity, cls, slot = pick(Object.keys(SLOTS))) {
+  const R = RARITY[rarity];
+  const main = Math.random() < 0.75 ? MAIN_ATTR[cls][0] : MAIN_ATTR[cls][1];
+  const base = slot === 'arma' ? pick(BASES.arma[cls]) : pick(BASES[slot]);
+  const budget = (2 + level * 0.9) * R.mult * (slot === 'arma' ? 1.3 : slot === 'pecho' ? 1.1 : 0.85);
+  const stats = { [main]: Math.max(1, Math.round(budget * 0.7)) };
+  const second = MAIN_ATTR[cls].find((a) => a !== main) || 'resistencia';
+  if (rarity >= 1) stats[second] = (stats[second] || 0) + Math.max(1, Math.round(budget * 0.35));
+  if (rarity >= 3) stats.agilidad = (stats.agilidad || 0) + Math.round(budget * 0.25);
+  const item = {
+    uid: uid++, type: 'equip', slot, level, rarity, cls,
+    name: `${base} ${pick(SUFFIX[main])}`,
+    stats, armor: slot === 'arma' || slot === 'abalorio' ? 0 : Math.round((3 + level * 1.6) * R.mult * (slot === 'pecho' ? 1.4 : 1)),
+    forge: 0,
   };
+  if (slot === 'arma') item.dmg = Math.round((4 + level * 2.2) * R.mult);
+  item.value = Math.round((3 + level * 2) * R.mult * R.mult);
+  return item;
 }
 
-export function starterWeapon() {
-  return {
-    uid: uid(), id: 'starter_sword', type: 'equipment', name: 'Espada de entrenamiento',
-    slot: 'weapon', rarity: 'common', ilvl: 1, reqLevel: 1, icon: '🗡️',
-    stats: { strength: 1, weaponDmg: 3 }, maxStack: 1, qty: 1,
-  };
-}
-
-// ---------- Consumibles y materiales (apilables) ----------
 export const CONSUMABLES = {
-  meat:        { name: 'Carne de lobo',      icon: '🍖', type: 'food',     hunger: 35, heal: 15, maxStack: 20, desc: 'Restaura 35 de hambre y 15 de vida.' },
-  berries:     { name: 'Bayas silvestres',   icon: '🍓', type: 'food',     hunger: 15, heal: 5,  maxStack: 20, desc: 'Restaura 15 de hambre.' },
-  potion_hp:   { name: 'Poción de sanación', icon: '🧪', type: 'potion',   healPct: 0.4, maxStack: 10, rarity: 'uncommon', desc: 'Restaura el 40% de tu vida.' },
-  potion_mana: { name: 'Poción de maná',     icon: '💧', type: 'potion',   manaPct: 0.5, maxStack: 10, rarity: 'uncommon', desc: 'Restaura el 50% de tu maná.' },
-  wood:        { name: 'Madera',             icon: '🪵', type: 'material', maxStack: 50, desc: 'Material de construcción y artesanía.' },
-  gel:         { name: 'Gelatina de limo',   icon: '🟢', type: 'material', maxStack: 50, desc: 'Pegajosa. Útil para alquimia.' },
-  bone:        { name: 'Hueso antiguo',      icon: '🦴', type: 'material', maxStack: 50, desc: 'Cruje un poco.' },
-  cloth:       { name: 'Tela de lino',       icon: '🧶', type: 'material', maxStack: 50, desc: 'Sirve para sastrería.' },
-  fur:         { name: 'Piel de oso polar',  icon: '🐾', type: 'material', maxStack: 50, desc: 'Gruesa y cálida. Muy valiosa.' },
-  frost_crystal: { name: 'Cristal de escarcha', icon: '🧊', type: 'material', maxStack: 50, rarity: 'rare', desc: 'Frío al tacto. Solo se encuentra en el Bosque Invernal.' },
+  pocion: { name: 'Poción de vida', icon: '🧪', desc: 'Recupera un 40% de la vida.', price: 8, color: '#ff5a5a' },
+  eter: { name: 'Poción de maná', icon: '🔷', desc: 'Recupera un 50% del maná (o energía/furia).', price: 8, color: '#5aa0ff' },
+  piedra: { name: 'Piedra de hogar', icon: '🏠', desc: 'Te devuelve al pueblo de Albor.', price: 0, color: '#ffd84a' },
+};
+export const QUEST_ITEMS = {
+  piel: { name: 'Piel de jabalí', icon: '🟫' },
+  hueso: { name: 'Fragmento de hueso', icon: '🦴' },
+  nucleo: { name: 'Núcleo de gólem', icon: '🔶' },
 };
 
-export function createStack(id, qty = 1) {
-  const d = CONSUMABLES[id];
-  return { uid: uid(), id, ...d, rarity: d.rarity || 'common', qty };
+export function itemPower(it) {
+  if (!it) return 0;
+  const f = 1 + (it.forge || 0) * 0.12;
+  return Object.values(it.stats).reduce((a, b) => a + b, 0) * f + (it.dmg || 0) * f + (it.armor || 0) * 0.3;
 }
+export function forgeCost(it) { return Math.round((10 + it.level * 4) * Math.pow(1.45, it.forge || 0)); }
+export const FORGE_MAX = 10;
+export function sellPrice(it) { return Math.max(1, Math.round((it.value || 2) * (1 + (it.forge || 0) * 0.3))); }
