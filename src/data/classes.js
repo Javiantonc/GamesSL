@@ -45,3 +45,4 @@ export const ATTRIBUTES = {
 export const ATTR_PER_POINT = 2;
 export const ATTR_POINTS_PER_LEVEL = 3;
 export const SKILL_POINTS_PER_LEVEL = 1;
+export const SKILL_LEVEL_STEP = 2;      // se gana un punto de habilidad cada 2 niveles

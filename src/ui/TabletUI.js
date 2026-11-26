@@ -175,7 +175,7 @@ export class TabletUI {
   renderSkills() {
     const st = this.state;
     const s = st.stats;
-    const head = el('div', 'app-head', `<h2>✨ Habilidades</h2><p>Puntos de habilidad: <b class="big-pts">${st.skillPoints}</b> · ${IS_MOBILE ? 'toca un icono y luego un botón de la derecha para colocarla' : 'arrastra un icono a tu barra de acción'}</p>`);
+    const head = el('div', 'app-head', `<h2>✨ Habilidades</h2><p>Puntos de habilidad: <b class="big-pts">${st.skillPoints}</b> <small>(1 cada 2 niveles)</small> · ${IS_MOBILE ? 'toca un icono y luego un botón de la derecha para colocarla' : 'arrastra un icono a tu barra de acción'}</p>`);
     this.appEl.append(head);
     if (!st.classId) {
       const n = el('div', 'notice', 'Todavía no tienes clase. Elige una para desbloquear sus habilidades.');

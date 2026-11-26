@@ -4,7 +4,7 @@ import { ActionBar } from './ActionBar.js';
 import { computeStats } from './Stats.js';
 import { xpForLevel, MAX_LEVEL } from './Progression.js';
 import { ABILITIES, GCD, MAX_RANK, rankPower, rankCooldown } from '../data/abilities.js';
-import { CLASSES, ATTRIBUTES, ATTR_POINTS_PER_LEVEL, SKILL_POINTS_PER_LEVEL } from '../data/classes.js';
+import { CLASSES, ATTRIBUTES, ATTR_POINTS_PER_LEVEL, SKILL_POINTS_PER_LEVEL, SKILL_LEVEL_STEP } from '../data/classes.js';
 import { createStack, starterWeapon, STAT_NAMES } from '../data/items.js';
 import { bus } from '../core/EventBus.js';
 import {
@@ -166,7 +166,8 @@ export class PlayerState {
     if (this.level >= MAX_LEVEL) this.xp = 0;
     if (gained) {
       this.attrPoints += gained * ATTR_POINTS_PER_LEVEL;
-      this.skillPoints += gained * SKILL_POINTS_PER_LEVEL;
+      // 1 punto de habilidad cada 2 niveles (niveles pares)
+      for (let l = this.level - gained + 1; l <= this.level; l++) if (l % SKILL_LEVEL_STEP === 0) this.skillPoints += SKILL_POINTS_PER_LEVEL;
       this.recalc();
       this.hp = this.stats.maxHp;
       this.mana = this.stats.maxMana;

@@ -15,6 +15,9 @@ export class LootSystem {
 
   dropFrom(mob) {
     const items = rollLoot(mob.def, mob.level, mob.elite, Math.random, { boss: mob.boss, ...(mob.opts.loot || {}) });
+    // El equipo que sueltan los monstruos siempre lo puedes llevar puesto ya
+    const lvl = this.scene.state.level;
+    for (const it of items) if (it.type === 'equipment') it.reqLevel = Math.min(it.reqLevel, lvl);
     const now = performance.now();
     items.forEach((item) => {
       const ang = Math.random() * Math.PI * 2, r = 14 + Math.random() * 18;

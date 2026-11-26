@@ -114,9 +114,9 @@ export function generateWorld(w, h, seed) {
       const b = biomeAt(x, y);
       if (Math.hypot(x - cx, y - cy) < 13 || nearPortal(x, y, 3)) continue;   // el pueblo de Albor ocupa el claro
       let p = 0;
-      if (b === 'forest') p = 0.24;
-      else if (b === 'grass') p = 0.018;
-      else if (b === 'hill') p = 0.04;
+      if (b === 'forest') p = 0.085;          // antes 0.24: bosques más abiertos
+      else if (b === 'grass') p = 0.006;
+      else if (b === 'hill') p = 0.015;
       if (rng() < p) {
         const kind = b === 'forest' ? (rng() < 0.5 ? 'tree_pine' : 'tree_oak') : b === 'hill' ? 'tree_pine' : (rng() < 0.3 ? 'tree_fruit' : 'tree_oak');
         trees.push({ tx: x, ty: y, kind, ox: Math.round((rng() - 0.5) * 10) });

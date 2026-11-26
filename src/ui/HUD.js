@@ -147,6 +147,12 @@ export class HUD {
     this.lootLog.append(line);
     while (this.lootLog.children.length > 6) this.lootLog.firstChild.remove();
     setTimeout(() => line.classList.add('fade'), 7000);
+    if (item.type === 'equipment') {
+      const cur = this.state.equipment.slots[item.slot];
+      const score = (it) => (it ? Object.values(it.stats).reduce((a, b) => a + b, 0) : -1);
+      const better = score(item) > score(cur);
+      this.toast(`🎁 ¡Botín! <b style="color:${R.color}">${item.icon} ${item.name}</b>${better ? ' <span class="up">▲ mejor que el tuyo</span>' : ''} · equípalo en la tablet (T)`, '#ffffff');
+    }
   }
 
   /** Cartel grande al entrar/salir/completar una mazmorra. */
@@ -188,7 +194,7 @@ export class HUD {
   }
 
   levelUp({ level, learned }) {
-    this.banner.innerHTML = `<div class="lv">¡NIVEL ${level}!</div><div class="learn">+3 puntos de atributo · +1 punto de habilidad</div>` +
+    this.banner.innerHTML = `<div class="lv">¡NIVEL ${level}!</div><div class="learn">+3 puntos de atributo · ${level % 2 === 0 ? '+1 punto de habilidad' : 'punto de habilidad en el nivel ' + (level + 1)}</div>` +
       (learned.length ? `<div class="learn">Nueva habilidad: ${learned.map((a) => `${a.icon} ${a.name}`).join(', ')} (añadida a tu barra)</div>` : '') +
       '<small>Abre tu tablet (T) para gastarlos</small>';
     this.banner.classList.remove('show'); void this.banner.offsetWidth; this.banner.classList.add('show');

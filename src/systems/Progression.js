@@ -1,8 +1,8 @@
 export const MAX_LEVEL = 80;
 
-/** XP necesaria para pasar del nivel `l` al `l+1`. */
+/** XP necesaria para pasar del nivel `l` al `l+1`. Crece rápido: cada nivel cuesta bastante más que el anterior. */
 export function xpForLevel(l) {
-  return Math.floor(70 * Math.pow(l, 1.45));
+  return Math.floor(75 * Math.pow(l, 1.65));
 }
 
 /** XP que da un monstruo, con penalización estilo WoW si es "gris". */

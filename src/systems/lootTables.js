@@ -2,7 +2,7 @@ import { generateItem, createStack } from '../data/items.js';
 
 /**
  * Tabla de botín. Función pura: dado un monstruo, devuelve los objetos que suelta.
- *  - Equipo aleatorio (40%; élites siempre, mínimo Raro)
+ *  - Equipo aleatorio equipable (22%; élites siempre, mínimo Raro)
  *  - Materiales propios del monstruo
  *  - Pociones ocasionales
  */
@@ -22,7 +22,7 @@ export function rollLoot(def, level, elite, rng = Math.random, opts = {}) {
   } else if (elite) {
     out.push(generateItem(level + 1, rng, { minRarity: 'rare' }));
     if (rng() < 0.5) out.push(generateItem(level, rng, { minRarity: 'uncommon' }));
-  } else if (rng() < 0.4) {
+  } else if (rng() < 0.22) {
     out.push(generateItem(level, rng));
   }
   for (const id of def.loot) {
