@@ -10,6 +10,7 @@ let lastWorldPos = null;
 
 /* ---------------------------------------------------------------- escenas */
 function enterScene(S, x, y) {
+  if (hero.mounted && S.kind !== 'world') { hero.mounted = false; refreshLook(); }
   SC = S; npcs = S.npcs; mobs = S.mobs;
   hero.x = x; hero.y = y; hero.dir = 0;
   shots.length = 0; closeLoot(); closeWin();
@@ -169,6 +170,7 @@ function openRole(n) {
   const role = n.V.role;
   if (role === 'shop') { shopWho = n.V.name; return openShop('buy'); }
   if (role === 'flight') return openFlight(n);
+  if (role === 'stable') return openStable(n);
   if (role.startsWith('prof:')) return openTrainer(role.slice(5), n);
   if (role.startsWith('class:')) return openClassTrainer(role.slice(6), n);
   if (role === 'inn') return openInn(n);
@@ -180,6 +182,7 @@ let stock = null, stockLvl = 0, shopWho = 'Tobías';
 function shopStock() {
   if (!stock || stockLvl !== hero.lvl || stock.cls !== hero.cls) {
     stock = [0, 1, 1, 2].map((r, i) => makeWeapon(hero.cls, hero.lvl + (i > 1 ? 1 : 0), r)); stock.cls = hero.cls; stockLvl = hero.lvl;
+    if (SECONDARY[hero.cls]) stock.push(makeSecondary(hero.cls, hero.lvl, 0), makeSecondary(hero.cls, hero.lvl, 1));
     const slots = SLOT_ORDER.slice().sort(() => Math.random() - 0.5).slice(0, 8);
     stock.gear = slots.map((sl, i) => makeGear(hero.cls, hero.lvl, i < 3 ? 0 : i < 7 ? 1 : 2, sl));
   }
@@ -358,8 +361,8 @@ let zoneT = 0, mmT = 0;
 function updateWorldStuff(dt) {
   for (let i = timers.length - 1; i >= 0; i--) if (T >= timers[i].t) { const f = timers[i].fn; timers.splice(i, 1); f(); }
   if (hero.gather) {
-    hero.gather.p += dt / 1.6; gbar.querySelector('i').style.width = `${Math.min(100, hero.gather.p * 100)}%`;
-    if (hero.gather.p >= 1) finishGather();
+    hero.gather.p += dt / (hero.gather.mount ? 1.2 : 1.6); gbar.querySelector('i').style.width = `${Math.min(100, hero.gather.p * 100)}%`;
+    if (hero.gather.p >= 1) { if (hero.gather.mount) finishMount(hero.gather.mount); else finishGather(); }
   }
   if (SC !== WORLD) return;
   warmChunks(hero.x, hero.y);

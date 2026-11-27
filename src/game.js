@@ -10,9 +10,10 @@ const VILLAGERS = {
   dario:    { name: 'Darío', title: 'Explorador', pos: [440, 40], look: { gender: 'chico', skin: SKINS[3], hair: '#3a2a24', style: 'pincho', eye: '#6b4226', outfit: '#b5652e', wear: 'tunic', weapon: 'map', face: 'alegre' }, greet: 'He recorrido medio mapa. Las Colinas de Piedra esconden cosas que no deberían andar.' },
   bruno:    { name: 'Pescador Bruno', title: 'Pesca', role: 'prof:pesca', pos: [-830, 560], look: { gender: 'chico', skin: SKINS[2], hair: '#6b4226', style: 'corto', eye: '#2a2220', outfit: '#3f7a7a', wear: 'tunic', hat: 'cap', hatC: '#c9a24a', beard: '#6b4226', weapon: 'spear', face: 'alegre' }, greet: '' },
   greta:    { name: 'Minera Greta', title: 'Minería', role: 'prof:mineria', pos: [900, -40], look: { gender: 'chica', skin: SKINS[1], hair: '#3a2a24', style: 'mono', eye: '#6b4226', outfit: '#7a5236', wear: 'mail', hat: 'helm', weapon: 'hammer', face: 'decidido' }, greet: '' },
+  tomas:    { name: 'Mozo Tomás', title: 'Establos · Monturas', role: 'stable', pos: [600, 170], look: { gender: 'chico', skin: SKINS[2], hair: '#b5652e', style: 'pincho', eye: '#2a2220', outfit: '#6b5a3a', wear: 'tunic', hat: 'cap', hatC: '#7a5236', weapon: 'map', face: 'alegre', beard: '#b5652e', beardT: 'sombra' }, greet: '' },
   nieve:    { name: 'Vigía Nieve', title: 'Centinela del hielo', pos: [420, -170], look: { gender: 'chica', skin: '#f4dcc8', hair: '#d9d6cc', style: 'largo', eye: '#3d5a8a', outfit: '#6a8aa8', wear: 'robe', hat: 'hood', hatC: '#8aa8c0', weapon: 'staff', face: 'serio' }, greet: 'Vigilo el portal de hielo. Solo quien venza a los diez espectros podrá cruzarlo.' },
 };
-const HP = { picaro: 80, mago: 65, paladin: 115, guerrero: 100, brujo: 72 };
+const HP = { picaro: 80, mago: 65, paladin: 115, guerrero: 100, brujo: 72, cazador: 85 };
 const SPD = 155;
 let npcs = [], mobs = [], SC = null;
 const BAGMAX = 24;
@@ -73,7 +74,7 @@ function rollLoot(m) {
   if (Math.random() < (dg ? 0.45 : 0.3)) items.push({ kind: 'gear', g: makeGear(hero.cls, Math.max(1, m.lvl + ((Math.random() * 3) | 0) - 1), rollRarity(m.lvl * 0.8 + (dg ? 30 : 0))) });
   if (md && Math.random() < md[2]) items.push({ kind: 'mat', icon: md[0], name: md[1], n: 1 + (Math.random() < 0.3 ? 1 : 0) });
   if (Math.random() < 0.14) items.push({ kind: 'potion', icon: '🧪', name: 'Poción de vida', n: 1 });
-  if (Math.random() < (dg ? 0.3 : 0.2)) items.push({ kind: 'weapon', w: makeWeapon(hero.cls, Math.max(1, m.lvl + ((Math.random() * 3) | 0) - 1), rollRarity(m.lvl * 0.8 + (dg ? 30 : 0))) });
+  if (Math.random() < (dg ? 0.3 : 0.2)) { const wl = Math.max(1, m.lvl + ((Math.random() * 3) | 0) - 1), wr = rollRarity(m.lvl * 0.8 + (dg ? 30 : 0)); items.push({ kind: 'weapon', w: SECONDARY[hero.cls] && Math.random() < 0.35 ? makeSecondary(hero.cls, wl, wr) : makeWeapon(hero.cls, wl, wr) }); }
   return items;
 }
 function nearCorpse() {
@@ -104,6 +105,7 @@ addEventListener('keydown', (e) => {
   if (e.code === 'KeyX' || e.code === 'Digit7') throwBomb();
   if (e.code === 'KeyM') toggleMap();
   if (e.code === 'KeyC') openChar();
+  if (e.code === 'KeyY' || e.code === 'Digit9') toggleMount();
   if (e.code === 'Tab') { e.preventDefault(); cycleTarget(); }
   if (e.code === 'KeyV' || e.code === 'Digit8') eatFood();
   if (e.code === 'KeyP' || e.code === 'KeyL') openProfs();
@@ -209,6 +211,7 @@ function gainXp(n) {
 function hurtHero(n) {
   if (hero.dead) return;
   n = Math.max(1, Math.round(n * (1 - armorDR())));
+  if (hero.mounted) dismount();
   if (hero.shield && hero.shield.until > T && hero.shield.amt > 0) {
     const a = Math.min(n, hero.shield.amt); hero.shield.amt -= a; n -= a;
     if (!n) { nums.push({ x: hero.x, y: hero.y - 100, t: 0, txt: 'Absorbido', c: '#9ad8ff' }); return; }
@@ -232,7 +235,7 @@ function update(dt) {
   const len = Math.hypot(mx, my);
   hero.moving = len > 0.2 && !hero.dead;
   if (hero.moving) {
-    const sp = SPD * (hero.speedUp && hero.speedUp.until > T ? hero.speedUp.v : 1) * dt / Math.max(1, len);
+    const sp = SPD * (hero.speedUp && hero.speedUp.until > T ? hero.speedUp.v : 1) * mountSpeed() * dt / Math.max(1, len);
     const nx = hero.x + mx * sp, ny = hero.y + my * sp;
     if (!blocked(nx, hero.y)) hero.x = nx;
     if (!blocked(hero.x, ny)) hero.y = ny;
@@ -410,7 +413,7 @@ function draw() {
       const top = m.y - (D.hb || (D.body === 'blob' ? 58 : 100)) * s, bw = m.boss ? 110 : 56;
       if (m.hp < m.max || m.state === 'chase') { ctx.fillStyle = '#2a2220'; ctx.fillRect(m.x - bw / 2, top - 4, bw, 8); ctx.fillStyle = m.state === 'chase' ? '#d9402e' : '#d9a93a'; ctx.fillRect(m.x - bw / 2 + 2, top - 2, (bw - 4) * m.hp / m.max, 4); }
     } else {
-      const c = it.n || it.h, isHero = !!it.h, L = isHero ? c.look : c.V.look;
+      const c = it.n || it.h, isHero = !!it.h, L = isHero ? (c.secT > T && c.second ? { ...c.look, weapon: c.second, offhand: null } : c.look) : c.V.look;
       let dir = c.dir, flip = c.flip;
       if (isHero && c.spin > 0) { const k = Math.floor(c.spin * 16) % 4; dir = [0, 2, 1, 2][k]; flip = k === 3; }
       const spr = toonSprite(L, dir, isHero ? c.frame : 0, isHero && c.atkT > 0 ? 'atk' : '');
@@ -423,17 +426,23 @@ function draw() {
       }
       const bob = isHero ? 0 : Math.sin(T * 2 + c.t) * 0.8;
       ctx.save(); ctx.translate(c.x, c.y);
-      if (dir === 2 && flip) ctx.scale(-1, 1);
+      if (dir === 2 && flip && !(isHero && c.mounted)) ctx.scale(-1, 1);
       if (isHero && (c.hurt > 0 || c.dead)) ctx.globalAlpha = c.dead ? 0.4 : 0.55 + Math.sin(T * 50) * 0.3;
       if (isHero && c.stealth > T) ctx.globalAlpha = 0.35;
-      ctx.drawImage(spr, -FX, -FY + bob, TW, TH);
+      if (isHero && c.mounted) drawMounted(ctx, c, spr, dir, flip); else ctx.drawImage(spr, -FX, -FY + bob, TW, TH);
       if (isHero && c.shield && c.shield.until > T && c.shield.amt > 0) { ctx.globalAlpha = 0.25 + Math.sin(T * 5) * 0.08; ctx.fillStyle = c.shield.c; ctx.beginPath(); ctx.ellipse(0, -50, 44, 62, 0, 0, 7); ctx.fill(); ctx.globalAlpha = 0.8; ctx.strokeStyle = c.shield.c; ctx.lineWidth = 3; ctx.stroke(); }
       ctx.restore();
     }
   }
   // proyectiles y efectos
   X = ctx;
-  for (const s of shots) { const r = s.ab.big ? 9 : 6; ctx.fillStyle = s.c; ctx.beginPath(); ctx.arc(s.x, s.y, r + 4, 0, 7); ctx.globalAlpha = 0.35; ctx.fill(); ctx.globalAlpha = 1; ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, 7); ctx.fill(); ctx.lineWidth = 2.4; ctx.strokeStyle = OUT; ctx.stroke(); dot(s.x - 2, s.y - 2, r * 0.35, '#fff'); }
+  for (const s of shots) if (s.arrow) {
+    const a = Math.atan2(s.vy, s.vx); ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(a);
+    if (s.arrow === 'bala') { ctx.fillStyle = 'rgba(255,240,200,.5)'; ctx.fillRect(-26, -1.5, 22, 3); dot(0, 0, 3.4, '#3a3440'); }
+    else { ctx.strokeStyle = OUT; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-20, 0); ctx.lineTo(8, 0); ctx.stroke(); ctx.strokeStyle = '#c8a070'; ctx.lineWidth = 2; ctx.stroke(); ctx.fillStyle = s.ab.color && s.ab.color !== '#e8dcc0' ? s.ab.color : '#c9ced6'; ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(6, -4.5); ctx.lineTo(6, 4.5); ctx.closePath(); ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = OUT; ctx.stroke(); ctx.fillStyle = '#e8e2d0'; ctx.fillRect(-21, -4, 6, 3); ctx.fillRect(-21, 1, 6, 3); }
+    ctx.restore();
+  }
+  for (const s of shots) if (!s.arrow) { const r = s.ab.big ? 9 : 6; ctx.fillStyle = s.c; ctx.beginPath(); ctx.arc(s.x, s.y, r + 4, 0, 7); ctx.globalAlpha = 0.35; ctx.fill(); ctx.globalAlpha = 1; ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, 7); ctx.fill(); ctx.lineWidth = 2.4; ctx.strokeStyle = OUT; ctx.stroke(); dot(s.x - 2, s.y - 2, r * 0.35, '#fff'); }
   for (const f of fx) {
     const k = f.t / f.life;
     if (f.k === 'p') { ctx.globalAlpha = 1 - k; ctx.fillStyle = f.c; ctx.beginPath(); ctx.arc(f.x, f.y, 4, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
@@ -493,7 +502,7 @@ function draw() {
   for (const p of SC.portals) if (inView(p.x, p.y, 120, 200)) label(`Portal ${p.name} · Nv ${p.lvl}${hero && hero.done[p.i] ? ' ✔' : ''}`, p.x, p.y - 180, p.col, fs);
   if (act && act.ref !== talkingTo && act.ref !== lootOf) label(touch ? `Toca ${act.icon} ${act.text}` : `[E] ${act.text}`, act.x, act.y + 26, '#ffffff', fs * 0.85);
   for (const m of mobs) if (!m.dead && hero && Math.hypot(m.x - hero.x, m.y - hero.y) < 300) label(`${m.name || MONSTERS[m.type].name} · Nv ${m.lvl}`, m.x, m.y - (MONSTERS[m.type].top || (MONSTERS[m.type].body === 'blob' ? 66 : 112)) * MONSTERS[m.type].size * (m.sc || 1), m.boss ? '#ffb0ff' : m.state === 'chase' ? '#ff9a8a' : '#ffd27a', fs * (m.boss ? 1 : 0.8));
-  if (hero) label(hero.name, hero.x, hero.y - (hero.look.hat === 'wizard' ? 132 : 112), '#ffffff', fs);
+  if (hero) label(hero.name, hero.x, hero.y - (hero.look.hat === 'wizard' ? 132 : 112) - (hero.mounted ? 42 : 0), '#ffffff', fs);
   for (const n of nums) {
     const k = n.t / (n.big ? 1.6 : 0.9);
     ctx.globalAlpha = k > 0.6 ? 1 - (k - 0.6) / 0.4 : 1;
@@ -507,10 +516,11 @@ function draw() {
 const bar2 = document.getElementById('bar2');
 function buildBar() {
   const keyL = ['1', '2·Q', '3·R', '4·F', '5·T'];
-  bar2.innerHTML = hero.abil.bar.map((id, i) => { const ab = id && ABIL[id]; return `<button class="slot ab${i}" data-s="${i}" title="${ab ? ab.name : 'Vacía: equipa una habilidad en el libro (K)'}"><em>${keyL[i]}</em>${ab ? ab.icon : '<span class="empty">＋</span>'}<span class="cd"></span></button>`; }).join('') + '<button class="slot pot" id="potbtn" title="Poción de vida (6 o Z)"><em>6</em>🧪<b id="potn"></b></button><button class="slot pot bomb" id="bombbtn" title="Bomba (7 o X)"><em>7</em>💣<b id="bombn"></b></button><button class="slot pot food" id="foodbtn" title="Comer (8 o V)"><em>8</em>🍖<b id="foodn"></b></button>';
+  bar2.innerHTML = hero.abil.bar.map((id, i) => { const ab = id && ABIL[id]; return `<button class="slot ab${i}" data-s="${i}" title="${ab ? ab.name : 'Vacía: equipa una habilidad en el libro (K)'}"><em>${keyL[i]}</em>${ab ? ab.icon : '<span class="empty">＋</span>'}<span class="cd"></span></button>`; }).join('') + '<button class="slot pot" id="potbtn" title="Poción de vida (6 o Z)"><em>6</em>🧪<b id="potn"></b></button><button class="slot pot bomb" id="bombbtn" title="Bomba (7 o X)"><em>7</em>💣<b id="bombn"></b></button><button class="slot pot food" id="foodbtn" title="Comer (8 o V)"><em>8</em>🍖<b id="foodn"></b></button>' + (hero.mounts && hero.mounts.length ? '<button class="slot pot mount" id="mountbtn" title="Montar (Y o 9)"><em>Y</em>🐎</button>' : '');
   potBtn = document.getElementById('potbtn'); potEl = document.getElementById('potn');
   potBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); drinkPotion(); });
   document.getElementById('foodbtn').addEventListener('pointerdown', (e) => { e.preventDefault(); eatFood(); });
+  document.getElementById('mountbtn')?.addEventListener('pointerdown', (e) => { e.preventDefault(); toggleMount(); });
   document.getElementById('bombbtn').addEventListener('pointerdown', (e) => { e.preventDefault(); throwBomb(); });
   bar2.querySelectorAll('.slot[data-s]').forEach((b) => b.addEventListener('pointerdown', (e) => { e.preventDefault(); if (hero.abil.bar[+b.dataset.s]) use(+b.dataset.s); else openBook(+b.dataset.s); }));
   document.getElementById('tip').innerHTML = 'Autoapuntado activado (Tab o clic en un monstruo para cambiar de objetivo) · Habilidades: Espacio/clic, Q, R, F, T (o 1-5) · E: interactuar · K: libro de habilidades · B: bolsa · C: personaje · P: profesiones · M: mapa';
@@ -546,7 +556,7 @@ function drawPortrait() {
 const SAVE = 'mini-realms-toon-heroe';
 const opt = { name: '', gender: 'chico', cls: 'mago', skin: SKINS[1], style: 'corto', hair: HAIRS[1], eye: EYES[0], outfit: CLASSES.mago.color, face: 'alegre' };
 try { Object.assign(opt, JSON.parse(localStorage.getItem(SAVE)) || {}); } catch { /* */ }
-const KEEP = ['lvl', 'xp', 'weapon', 'bag', 'gold', 'mats', 'potions', 'res', 'profs', 'tools', 'bombs', 'found', 'done', 'seen', 'gear', 'food', 'abil', 'offhand', 'towns'];
+const KEEP = ['lvl', 'xp', 'weapon', 'bag', 'gold', 'mats', 'potions', 'res', 'profs', 'tools', 'bombs', 'found', 'done', 'seen', 'gear', 'food', 'abil', 'offhand', 'towns', 'second', 'mounts'];
 function save() { if (!hero) return; try { syncSeen(); const o = { ...opt }; for (const k of KEEP) o[k] = hero[k]; localStorage.setItem(SAVE, JSON.stringify(o)); } catch { /* */ } }
 const pv = document.getElementById('preview'), pvx = pv.getContext('2d');
 let pvDir = 0, pvWalk = false;
@@ -609,6 +619,8 @@ document.getElementById('start').onclick = () => {
   const lvl = keep ? saved.lvl || 1 : 1;
   hero = { name: opt.name, cls: opt.cls, look: heroLook(opt), x: START.x, y: START.y, dir: 0, frame: 0, ft: 0, lvl, xp: keep ? saved.xp || 0 : 0, max: HP[opt.cls] + (lvl - 1) * 12, cd: { basic: 0, power: 0 }, atkT: 0, hurt: 0 };
   hero.weapon = keep && saved.weapon ? saved.weapon : starterWeapon(opt.cls);
+  hero.second = keep && saved.second ? saved.second : SECONDARY[opt.cls] ? Object.assign(makeSecondary(opt.cls, 1, 0), { dmg: 2, name: opt.cls === 'cazador' ? 'Cuchillo de caza' : 'Espada oxidada' }) : null;
+  hero.mounts = keep && saved.mounts ? saved.mounts : []; hero.mounted = false;
   hero.bag = keep && saved.bag ? saved.bag : [];
   hero.gold = keep ? saved.gold || 0 : 0; hero.mats = keep ? saved.mats || {} : {}; hero.potions = keep ? saved.potions ?? 2 : 2;
   const def = { res: {}, profs: {}, tools: {}, bombs: 0, found: [], done: [], skill: { basic: 1, power: 1 }, seen: '', gear: {}, food: {}, towns: ['albor'] };
@@ -711,7 +723,7 @@ function itemInfo(sel) {
     const s = bagStacks().find((x) => x.key === sel.stack); if (!s) return itemInfo(null);
     return `<div class="binfo"><div class="bh"><span class="bi">${s.icon}</span><div><b style="color:${s.col}">${s.name}</b><small>${s.n ? `Tienes ${s.n}` : 'Herramienta'}</small></div></div><p>${s.info}</p>${s.use ? `<div class="bact"><button class="big sm" data-use="${s.key}">${s.use}</button></div>` : ''}</div>`;
   }
-  const where = sel.eq === 'main' ? hero.weapon : sel.eq === 'off' ? hero.offhand : hero.bag.find((w) => w.id === sel.id);
+  const where = sel.eq === 'main' ? hero.weapon : sel.eq === 'off' ? hero.offhand : sel.eq === 'sec' ? hero.second : hero.bag.find((w) => w.id === sel.id);
   if (!where) return itemInfo(null);
   const it = where, R = RARITY[it.rarity], eq = !!sel.eq;
   let body = '', acts = '';
@@ -729,9 +741,11 @@ function itemInfo(sel) {
     body += `<small>Arma · ${(SHAPES[it.kind] && SHAPES[it.kind][it.shape]) || 'arma'} · Nv ${it.lvl}</small>`;
     body += eq ? `<div class="st"><span>Daño</span><b>${it.dmg}</b></div>` : cmp(it.dmg, ref.dmg, 'Daño');
     if (sel.eq === 'main') body += '<p class="sub">Es el arma que llevas en la mano.</p>';
+    else if (sel.eq === 'sec') body += '<p class="sub">Tu arma secundaria cuerpo a cuerpo: la sacas sola cuando un enemigo se te acerca.</p>';
     else if (sel.eq === 'off') { body += '<p class="sub">La llevas en la mano izquierda (Ambidextría).</p>'; acts += '<button class="ghost" data-unoff>Quitármela</button>'; }
     else {
-      if (it.kind === WEAPON_OF[hero.cls]) acts += `<button class="big sm" data-eq="${it.id}">Equipar</button>`;
+      if (mainKinds(hero.cls).includes(it.kind)) acts += `<button class="big sm" data-eq="${it.id}">Equipar</button>`;
+      if (hasSecond() && SECONDARY[hero.cls].includes(it.kind)) acts += `<button class="big sm" data-sec="${it.id}">Secundaria</button>`;
       if (hasDual() && it.kind === 'dagger') acts += `<button class="ghost" data-off="${it.id}">Mano izq.</button>`;
     }
   }
@@ -743,9 +757,9 @@ function renderBag() {
   const cell = (it) => `<button class="bcell r${it.rarity} ${bagSel && bagSel.id === it.id && !bagSel.eq ? 'on' : ''}" data-it="${it.id}"><img src="${itemIcon(it).toDataURL()}">${it.slot && !canWear(it) ? '<i class="no">✕</i>' : ''}</button>`;
   const empty = '<span class="bcell vacio"></span>';
   const stacks = bagStacks();
-  const eqCell = (w, k) => (w ? `<button class="bcell r${w.rarity} ${bagSel && bagSel.eq === k ? 'on' : ''}" data-eqs="${k}"><img src="${weaponIcon(w).toDataURL()}"><small>${k === 'main' ? 'Arma' : 'Izq.'}</small></button>` : '');
+  const eqCell = (w, k) => (w ? `<button class="bcell r${w.rarity} ${bagSel && bagSel.eq === k ? 'on' : ''}" data-eqs="${k}"><img src="${weaponIcon(w).toDataURL()}"><small>${k === 'main' ? 'Arma' : k === 'sec' ? 'Sec.' : 'Izq.'}</small></button>` : '');
   bagEl.innerHTML = `<header><b>🎒 Mochila</b><span class="purse2">🪙 ${hero.gold}</span><button class="ghost" data-close>✕</button></header>
-    <div class="bwrap"><div class="bleft"><div class="bgrid eqrow">${eqCell(hero.weapon, 'main')}${hasDual() ? eqCell(hero.offhand, 'off') || '<span class="bcell vacio"><small>Izq.</small></span>' : ''}<span class="bnote">Equipado · el resto de tu equipo está en 👤 (C)</span></div>
+    <div class="bwrap"><div class="bleft"><div class="bgrid eqrow">${eqCell(hero.weapon, 'main')}${hasDual() ? eqCell(hero.offhand, 'off') || '<span class="bcell vacio"><small>Izq.</small></span>' : ''}${hasSecond() ? eqCell(hero.second, 'sec') || '<span class="bcell vacio"><small>Sec.</small></span>' : ''}<span class="bnote">Equipado · el resto de tu equipo está en 👤 (C)</span></div>
     <h4>Equipo (${hero.bag.length}/${BAGMAX})</h4>
     <div class="bgrid">${hero.bag.map(cell).join('')}${empty.repeat(Math.max(0, BAGMAX - hero.bag.length))}</div>
     ${stacks.length ? `<h4>Objetos</h4><div class="bgrid">${stacks.map((s) => `<button class="bcell st ${bagSel && bagSel.stack === s.key ? 'on' : ''}" data-st="${s.key}" style="--c:${s.col}"><span>${s.icon}</span>${s.n ? `<b>${s.n}</b>` : ''}</button>`).join('')}</div>` : ''}
@@ -763,6 +777,11 @@ function renderBag() {
     const i = hero.bag.findIndex((w) => w.id === +d.off), w = hero.bag[i];
     if (hero.offhand) hero.bag[i] = hero.offhand; else hero.bag.splice(i, 1);
     hero.offhand = w; bagSel = { eq: 'off' }; refreshLook(); renderBag(); save();
+  });
+  q('[data-sec]', (d) => {
+    const i = hero.bag.findIndex((w) => w.id === +d.sec), w = hero.bag[i];
+    if (hero.second) hero.bag[i] = hero.second; else hero.bag.splice(i, 1);
+    hero.second = w; bagSel = { eq: 'sec' }; renderBag(); save(); toast(`Arma secundaria: <b style="color:${RARITY[w.rarity].color}">${w.name}</b>`);
   });
   q('[data-unoff]', () => { if (hero.bag.length >= BAGMAX) { toast('Tu mochila está llena'); return; } hero.bag.push(hero.offhand); hero.offhand = null; bagSel = null; refreshLook(); renderBag(); save(); });
   q('[data-geq]', (d) => { bagSel = null; equipGear(+d.geq); });

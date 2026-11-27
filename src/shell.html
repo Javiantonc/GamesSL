@@ -127,8 +127,8 @@
   .wpns { display: flex; gap: 6px; }
   #bag h4 { margin: 8px 0 5px; color: #ffd27a; font-size: 13px; }
   .bgrid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
-  .bgrid.eqrow { grid-template-columns: 52px 52px 1fr; align-items: center; }
-  .bnote { grid-column: span 4; font-size: 11px; color: #c8b898; }
+  .bgrid.eqrow { grid-template-columns: repeat(3, 52px) 1fr; align-items: center; }
+  .bnote { grid-column: span 3; font-size: 11px; color: #c8b898; }
   .bcell { position: relative; aspect-ratio: 1; min-width: 0; padding: 0; background: radial-gradient(#3a2818, #1a120c); border: 2px solid #4a3424; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; }
   .bcell img { width: 88%; height: 88%; } .bcell.vacio { background: #120c08; border-style: dashed; border-color: #3a2a1c; }
   .bcell.r0 { border-color: #a8a290; } .bcell.r1 { border-color: #7ad85a; } .bcell.r2 { border-color: #5aa0ff; } .bcell.r3 { border-color: #c070ff; box-shadow: inset 0 0 8px #c070ff88; } .bcell.r4 { border-color: #ffa53a; box-shadow: inset 0 0 10px #ffa53a99; }
@@ -163,6 +163,7 @@
   #gbar span { position: absolute; inset: 0; text-align: center; font-size: 11px; font-weight: bold; line-height: 16px; text-shadow: 0 1px 0 #000; }
   body.touch .slot.bomb { right: 262px; bottom: 2px; }
   body.touch .slot.food { right: 312px; bottom: 2px; }
+  body.touch .slot.mount { right: 362px; bottom: 2px; }
   body.touch .topbtn { top: max(8px, env(safe-area-inset-top)); width: 48px; height: 48px; font-size: 21px; }
   body.touch #profbtn { right: calc(max(10px, env(safe-area-inset-right)) + 56px); } body.touch #mapbtn { right: calc(max(10px, env(safe-area-inset-right)) + 112px); } body.touch #charbtn { right: calc(max(10px, env(safe-area-inset-right)) + 168px); }
   body.touch #minimap { right: max(10px, env(safe-area-inset-right)); top: calc(max(8px, env(safe-area-inset-top)) + 56px); width: 120px; height: 80px; }
@@ -216,7 +217,7 @@
     .chip { padding: 4px 7px; font-size: 12px; }
     .go { position: sticky; bottom: 0; background: #2b1d14; padding: 6px 0; }
     body.touch #hud { transform: scale(.7); }
-    body.touch .slot.pot { right: 18px; bottom: 214px; } body.touch .slot.bomb { right: 18px; bottom: 266px; } body.touch .slot.food { right: 18px; bottom: 318px; }
+    body.touch .slot.pot { right: 18px; bottom: 214px; } body.touch .slot.bomb { right: 18px; bottom: 266px; } body.touch .slot.food { right: 18px; bottom: 318px; } body.touch .slot.mount { right: 18px; bottom: 370px; }
     body.touch #hud { transform: scale(.62); }
     body.touch .topbtn { width: 44px; height: 44px; font-size: 19px; }
     body.touch #profbtn { right: calc(max(8px, env(safe-area-inset-right)) + 48px); } body.touch #mapbtn { right: calc(max(8px, env(safe-area-inset-right)) + 96px); } body.touch #charbtn { right: calc(max(8px, env(safe-area-inset-right)) + 144px); } body.touch #bagbtn { right: max(8px, env(safe-area-inset-right)); width: 44px; height: 44px; font-size: 19px; }

@@ -69,6 +69,12 @@ const CLASSES = {
     basic: { name: 'Tajo', icon: '🪓', kind: 'melee', dmg: 12, cd: 0.75, range: 50 },
     power: { name: 'Torbellino', icon: '🌀', kind: 'whirl', dmg: 16, cd: 6, radius: 76, color: '#ffffff' },
   },
+  cazador: {
+    name: 'Cazador', icon: '🏹', weapon: 'bow', wear: 'leather', hat: 'hooddown', color: '#6a7a3a',
+    desc: 'Experto con el <b>arco</b>, el <b>fusil</b> y la <b>ballesta</b>. Ataca desde muy lejos y, si se le acercan, saca su <b>espada</b> o daga.',
+    basic: { name: 'Disparo', icon: '🏹', kind: 'bolt', dmg: 8, cd: 0.6, range: 300, color: '#e8dcc0', speed: 520 },
+    power: { name: 'Disparo arcano', icon: '✴️', kind: 'bolt', dmg: 22, cd: 5, range: 320, color: '#9ad8ff', speed: 480, big: true },
+  },
   brujo: {
     name: 'Brujo', icon: '💀', weapon: 'dagger', wear: 'darkrobe', hat: 'hood', color: '#6b4a7a',
     desc: 'Usa magia oscura y una <b>daga</b> ritual. Su sombra consume poco a poco al enemigo.',
@@ -146,9 +152,34 @@ function weapon(kind, v = {}) {
       toon(RR(-2, -22, 4, 34, 2), wood, { sx: -1.2, sy: 0 });
       toon(RR(-9, -30, 18, 10, 2), '#7e8794', { sx: -1.5, sy: -1 });
       break;
-    case 'bow':
-      X.beginPath(); X.moveTo(0, -34); X.quadraticCurveTo(14, 0, 0, 34); X.lineWidth = 6; X.strokeStyle = OUT; X.stroke(); X.lineWidth = 3.4; X.strokeStyle = wood; X.stroke();
-      stroke([[0, -33], [0, 33]], '#e8dcc0', 1);
+    case 'bow': {
+      const L = shape === 'corto' ? 26 : shape === 'largo' ? 40 : 34, bw = shape === 'recurvo' ? 10 : 14;
+      X.beginPath(); X.moveTo(0, -L);
+      if (shape === 'recurvo') { X.bezierCurveTo(-4, -L + 6, bw + 6, -L * 0.5, bw, 0); X.bezierCurveTo(bw + 6, L * 0.5, -4, L - 6, 0, L); }
+      else X.quadraticCurveTo(bw * 1.4, 0, 0, L);
+      X.lineWidth = 6.4; X.strokeStyle = OUT; X.stroke(); X.lineWidth = 3.6; X.strokeStyle = v.mat && v.mat !== 'acero' && v.mat !== 'bronce' ? m : wood; X.stroke();
+      stroke([[0, -L + 1], [0, L - 1]], '#e8dcc0', 1.1);
+      toon(RR(2, -5, 5, 10, 2), acc, { shade: false, lw: 1.6 });
+      for (const y of [-L, L]) dot(0, y, 2, gem);
+      break;
+    }
+    case 'rifle':
+      toon(PL([[-3, 10], [3, 10], [4, 0], [2.5, -4], [-2.5, -4], [-4, 0]]), wood, { sx: -1, sy: 0, lw: 2 });   // culata
+      toon(RR(-2.4, -40, 4.8, 38, 1.5), m, { sx: -1, sy: 0, lw: 2 });                                         // cañón
+      toon(RR(-3.2, -24, 6.4, 22, 2), wood, { sx: -1, sy: 0, lw: 2 });
+      toon(RR(-3.6, -42, 7.2, 4, 1), acc, { shade: false, lw: 1.6 });
+      if (shape === 'trabuco') toon(PL([[-5, -40], [5, -40], [3.2, -34], [-3.2, -34]]), m, { shade: false, lw: 1.6 });
+      stroke([[2.5, -6], [5.5, -2]], OUT, 1.8);
+      if (shape === 'largo') toon(RR(-1.6, -50, 3.2, 10, 1), m, { shade: false, lw: 1.6 });
+      break;
+    case 'crossbow':
+      toon(RR(-3.4, -34, 6.8, 44, 2), wood, { sx: -1, sy: 0, lw: 2 });
+      stroke([[-16, -27], [0, -14], [16, -27]], '#e8dcc0', 1.2);
+      X.beginPath(); X.moveTo(-19, -24); X.quadraticCurveTo(0, -40, 19, -24); X.lineWidth = 6.4; X.strokeStyle = OUT; X.stroke(); X.lineWidth = 3.6; X.strokeStyle = m; X.stroke();
+      stroke([[0, -12], [0, -42]], OUT, 3.4); stroke([[0, -12], [0, -42]], '#c8a070', 1.6);
+      toon(PL([[-2.4, -40], [2.4, -40], [0, -47]]), '#c9ced6', { shade: false, lw: 1.4 });
+      stroke([[3, 0], [6, 4]], OUT, 1.8);
+      if (shape === 'pesada') toon(RR(-5, -10, 10, 7, 2), acc, { shade: false, lw: 1.6 });
       break;
     case 'mug':
       toon(RR(-5, -10, 10, 12, 2), '#b58a4a', { sx: -1.5, sy: 0 });
@@ -159,13 +190,16 @@ function weapon(kind, v = {}) {
       stroke([[-4, -4], [3, -1]], '#a8452f', 1.4);
       break;
     case 'sword':
-      toon(PL([[-3.6, -6], [3.6, -6], [3.2, -38], [0, -44], [-3.2, -38]]), m, { sx: -1.6, sy: 0 });
-      toon(RR(-8, -8, 16, 4, 2), acc, { shade: false }); toon(RR(-1.8, -4, 3.6, 9, 1.5), '#4a3424', { shade: false });
+      if (shape === 'curva') toon((k) => { k.moveTo(-3, -6); k.quadraticCurveTo(-8, -26, 2, -44); k.quadraticCurveTo(3, -26, 4, -6); k.closePath(); }, m, { sx: -1.6, sy: 0 });
+      else if (shape === 'ancha') toon(PL([[-5, -6], [5, -6], [4.4, -38], [0, -46], [-4.4, -38]]), m, { sx: -1.6, sy: 0 });
+      else toon(PL([[-3.6, -6], [3.6, -6], [3.2, -38], [0, -44], [-3.2, -38]]), m, { sx: -1.6, sy: 0 });
+      stroke([[0, -8], [0, -36]], dk(m), 1);
+      toon(RR(-8, -8, 16, 4, 2), acc, { shade: false }); toon(RR(-1.8, -4, 3.6, 9, 1.5), '#4a3424', { shade: false }); dot(0, -6, 1.4, gem);
       break;
   }
   if (M.glow && v.glow) X.restore();
 }
-const WSCALE = { dagger: 1.45, mace: 1.35, axe: 1.2, staff: 1.05, spear: 1, hammer: 1.2, bow: 1, mug: 1.1, map: 1.1, sword: 1.2 };
+const WSCALE = { dagger: 1.45, mace: 1.35, axe: 1.2, staff: 1.05, spear: 1, hammer: 1.2, bow: 1.1, mug: 1.1, map: 1.1, sword: 1.2, rifle: 1.15, crossbow: 1.1 };
 /** w: string (tipo) u objeto arma { kind, shape, mat, glow } */
 function drawWeapon(w, x, y, ang) {
   if (!w) return;

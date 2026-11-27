@@ -12,7 +12,7 @@
 const ARMOR_TYPES = ['tela', 'cuero', 'malla', 'placas'];
 const ARMOR_NAME = { tela: 'Tela', cuero: 'Cuero', malla: 'Malla', placas: 'Placas' };
 const ARMOR_MULT = { tela: 1, cuero: 1.8, malla: 2.8, placas: 4 };
-const MAIN_STAT = { picaro: 'Agilidad', mago: 'Intelecto', brujo: 'Intelecto', paladin: 'Fuerza', guerrero: 'Fuerza' };
+const MAIN_STAT = { picaro: 'Agilidad', mago: 'Intelecto', brujo: 'Intelecto', paladin: 'Fuerza', guerrero: 'Fuerza', cazador: 'Agilidad' };
 const SLOTS = {
   cabeza:   { name: 'Cabeza', icon: '⛑️', arm: 0.8, w: 1, base: { tela: 'Capucha', cuero: 'Capucha', malla: 'Yelmo', placas: 'Casco' } },
   cuello:   { name: 'Cuello', icon: '📿', arm: 0, w: 0.6, jewel: ['Collar', 'Colgante', 'Gargantilla', 'Amuleto'] },
@@ -46,7 +46,7 @@ const PALETTE = {
 const SUFFIX = [['del Oso', 0.5], ['del Lobo', 1], ['de la Ballena', 0], ['del Tigre', 0.7], ['del Halcón', 0.8], ['del Jabalí', 0.35]];
 const LEGEND_SUFFIX = ['del Titán Dormido', 'de los Mil Soles', 'del Dragón Eterno', 'de la Luna Rota'];
 const tierOfLvl = (l) => clamp(Math.ceil(l / 4), 1, 5);
-const maxArmor = (cls, lvl) => (cls === 'guerrero' || cls === 'paladin' ? (lvl >= 10 ? 'placas' : 'malla') : cls === 'picaro' ? 'cuero' : 'tela');
+const maxArmor = (cls, lvl) => (cls === 'guerrero' || cls === 'paladin' ? (lvl >= 10 ? 'placas' : 'malla') : cls === 'cazador' ? (lvl >= 10 ? 'malla' : 'cuero') : cls === 'picaro' ? 'cuero' : 'tela');
 const mainArmor = maxArmor;
 function canWear(it, h = hero) {
   if (!it.type || it.slot === 'espalda') return true;
@@ -142,6 +142,7 @@ function refreshLook() {
   const best = Math.max(0, ...Object.values(G).filter(Boolean).map((g) => g.rarity)), nEpic = Object.values(G).filter((g) => g && g.rarity >= 3).length;
   if (best >= 4 || nEpic >= 4) L.aura = best >= 4 ? '#ffa53a' : '#c070ff';
   if (hero.offhand && hasDual()) L.offhand = hero.offhand;
+  if (hero.mounted) L.mounted = true;
   if (G.hombros) L.shoulderC = G.hombros.color;
   if (G.piernas) L.pantsC = G.piernas.color;
   if (G.pies) L.bootsC = dk(G.pies.color);
@@ -179,7 +180,7 @@ function openChar() {
   const html = `${head(`👤 ${hero.name} · ${K.icon} ${K.name} nivel ${hero.lvl}`)}<div class="wbody">
     <div class="doll"><div class="gcol">${left.map(cell).join('')}</div>
       <div class="gmid"><canvas id="dollc" width="248" height="280"></canvas>
-        <div class="wpns"><div class="gslot wpn r${hero.weapon.rarity}"><img src="${weaponIcon(hero.weapon).toDataURL()}"><small>Arma</small></div>${hasDual() ? `<button class="gslot wpn ${hero.offhand ? 'r' + hero.offhand.rarity : ''}" data-off>${hero.offhand ? `<img src="${weaponIcon(hero.offhand).toDataURL()}">` : '<span>🗡️</span>'}<small>Mano izq.</small></button>` : ''}</div>
+        <div class="wpns"><div class="gslot wpn r${hero.weapon.rarity}"><img src="${weaponIcon(hero.weapon).toDataURL()}"><small>Arma</small></div>${hasSecond() ? `<button class="gslot wpn ${hero.second ? 'r' + hero.second.rarity : ''}" data-sec>${hero.second ? `<img src="${weaponIcon(hero.second).toDataURL()}">` : '<span>⚔️</span>'}<small>Secundaria</small></button>` : ''}${hasDual() ? `<button class="gslot wpn ${hero.offhand ? 'r' + hero.offhand.rarity : ''}" data-off>${hero.offhand ? `<img src="${weaponIcon(hero.offhand).toDataURL()}">` : '<span>🗡️</span>'}<small>Mano izq.</small></button>` : ''}</div>
         <button class="ghost" data-book>📖 Habilidades (K)</button></div>
       <div class="gcol">${right.map(cell).join('')}</div></div>
     <div class="stats"><span>❤️ Vida <b>${hero.max}</b></span><span>🛡️ Armadura <b>${hero.armor}</b> (−${Math.round(armorDR() * 100)} % daño)</span>
@@ -192,5 +193,6 @@ function openChar() {
   dx.drawImage(toonSprite(hero.look, 0, 0, ''), 0, 0, TW * TRES, TH * TRES, (248 - TW * 2) / 2, 280 - TH * 2, TW * 2, TH * 2);
   bind('[data-slot]', (d) => { if (hero.gear[d.slot]) { unequip(d.slot); openChar(); } });
   bind('[data-book]', () => openBook(0));
+  bind('[data-sec]', () => { if (hero.second && hero.bag.length < BAGMAX) { hero.bag.push(hero.second); hero.second = null; save(); renderBag(); openChar(); } });
   bind('[data-off]', () => { if (hero.offhand && hero.bag.length < BAGMAX) { hero.bag.push(hero.offhand); hero.offhand = null; refreshLook(); save(); renderBag(); openChar(); } });
 }

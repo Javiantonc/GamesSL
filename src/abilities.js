@@ -132,12 +132,37 @@ defAbils('brujo', [
   ['furia', 'Furia de las sombras', '🌑', 18, 'nova', { dmg: 40, stun: 2, radius: 130, cd: 18, color: '#7a3ad9' }],
   ['meta', 'Metamorfosis', '😈', 20, 'buff', { up: 0.5, abs: 0.3, dur: 12, cd: 40, color: '#b04dff' }],
 ]);
-const START_ABILS = { picaro: ['picaro.b1', 'picaro.veneno'], mago: ['mago.b1', 'mago.fuego'], paladin: ['paladin.b1', 'paladin.luz'], guerrero: ['guerrero.b1', 'guerrero.torbe'], brujo: ['brujo.b1', 'brujo.sombras'] };
+defAbils('cazador', [
+  ['b1', 'Disparo', '🏹', 1, 'bolt', { basic: true, dmg: 8, cd: 0.6, range: 300, color: '#e8dcc0', speed: 560 }],
+  ['b2', 'Disparo firme', '🎯', 8, 'bolt', { basic: true, dmg: 11, cd: 0.65, range: 320, color: '#e8dcc0', speed: 600 }],
+  ['b3', 'Disparo rápido', '⚡', 16, 'multi', { basic: true, dmg: 9, n: 2, cd: 0.7, range: 320, color: '#ffe98a', speed: 620 }],
+  ['arcano', 'Disparo arcano', '✴️', 1, 'bolt', { dmg: 22, cd: 5, range: 320, color: '#9ad8ff', speed: 520, big: true }],
+  ['conmo', 'Disparo de conmoción', '🧊', 2, 'bolt', { dmg: 10, slow: 4, cd: 6, range: 300, color: '#a8e8ff', speed: 560 }],
+  ['multi', 'Disparo múltiple', '🎆', 4, 'multi', { dmg: 14, n: 4, cd: 7, range: 300, color: '#ffd27a', speed: 560 }],
+  ['marca', 'Marca del cazador', '🎯', 4, 'buff', { up: 0.2, dur: 15, cd: 25, color: '#e04a4a' }],
+  ['raptor', 'Golpe de raptor', '🦅', 6, 'melee', { dmg: 18, cd: 5, range: 52, sec: true, color: '#ffd27a' }],
+  ['hielo', 'Trampa de hielo', '❄️', 6, 'meteor', { dmg: 4, stun: 3, radius: 80, delay: 0.4, cd: 15, range: 300, color: '#a8e8ff' }],
+  ['guepardo', 'Aspecto del guepardo', '🐆', 8, 'buff', { speed: 1.5, dur: 8, cd: 20, color: '#f0c040' }],
+  ['serpiente', 'Picadura de serpiente', '🐍', 8, 'bolt', { dmg: 4, dot: 8, ticks: 5, cd: 7, range: 300, color: '#8ae06a', speed: 560 }],
+  ['apuntado', 'Disparo apuntado', '🔭', 10, 'bolt', { dmg: 45, cd: 10, range: 360, color: '#fff0a0', speed: 760, big: true }],
+  ['fingir', 'Fingir muerte', '💀', 10, 'stealth', { dur: 5, mult: 2, cd: 25 }],
+  ['explosiva', 'Trampa explosiva', '💥', 12, 'meteor', { dmg: 30, dot: 6, ticks: 3, radius: 90, delay: 0.5, cd: 12, range: 300, color: '#ff8a2a' }],
+  ['desen', 'Desenganche', '🦘', 12, 'blink', { dist: 200, back: true, cd: 14, color: '#c8f0ff' }],
+  ['andanada', 'Andanada', '🌧️', 14, 'ground', { dmg: 10, radius: 110, dur: 5, cd: 14, range: 320, color: '#e8dcc0' }],
+  ['mangosta', 'Mordedura de mangosta', '🐍', 14, 'melee', { dmg: 24, stun: 1.5, cd: 9, range: 52, sec: true, color: '#8ae06a' }],
+  ['letal', 'Disparo letal', '☠️', 16, 'bolt', { dmg: 50, exec: true, cd: 10, range: 340, color: '#e04a4a', speed: 700 }],
+  ['fuego', 'Fuego rápido', '🔥', 18, 'buff', { up: 0.4, dur: 10, cd: 30, color: '#ff8a2a' }],
+  ['tormenta', 'Tormenta de flechas', '🌪️', 20, 'ground', { dmg: 22, radius: 140, dur: 6, cd: 25, range: 320, color: '#ffe98a' }],
+]);
+const hasSecond = () => !!(hero && SECONDARY[hero.cls]);
+/* golpe automático con el arma secundaria cuando un enemigo se acerca a una clase a distancia */
+const SEC_STRIKE = { id: 'sec', name: 'Golpe cuerpo a cuerpo', icon: '⚔️', kind: 'melee', dmg: 9, cd: 0.7, range: 52, sec: true, basic: true };
+const START_ABILS = { picaro: ['picaro.b1', 'picaro.veneno'], mago: ['mago.b1', 'mago.fuego'], paladin: ['paladin.b1', 'paladin.luz'], guerrero: ['guerrero.b1', 'guerrero.torbe'], brujo: ['brujo.b1', 'brujo.sombras'], cazador: ['cazador.b1', 'cazador.arcano'] };
 const KIND_NAME = { melee: 'Cuerpo a cuerpo', bolt: 'A distancia', multi: 'Varios objetivos', nova: 'Área a tu alrededor', ground: 'Zona de daño', meteor: 'Área en el objetivo', charge: 'Carga', blink: 'Movimiento', heal: 'Curación', shield: 'Escudo', buff: 'Mejora', stealth: 'Sigilo', passive: 'Pasiva' };
 
 /* ---------------------------------------------------------------- rangos */
 const rankOf = (id) => (hero.abil.known[id] || 0);
-const rankMul = (id) => 1 + (rankOf(id) - 1) * 0.2;
+const rankMul = (id) => 1 + (Math.max(1, rankOf(id)) - 1) * 0.2;
 const cdOf = (ab) => ab.cd * (ab.basic ? 1 : 1 - (rankOf(ab.id) - 1) * 0.05);
 const learnPrice = (ab) => Math.round(8 + ab.req * ab.req * 2.2);
 const rankPrice = (ab) => Math.round(learnPrice(ab) * 0.6 * rankOf(ab.id) + 10);
@@ -168,10 +193,10 @@ function abDesc(ab, r = Math.max(1, rankOf(ab.id))) {
 const zones = [];
 const hasDual = () => hero.cls === 'picaro' && rankOf('picaro.ambi') > 0;
 function abDmg(ab) {
-  const wf = ab.basic ? 0.6 : Math.min(1, ab.dmg / 12);
+  const wf = ab.basic ? 0.6 : Math.min(1, ab.dmg / 12), W = ab.sec && hero.second ? hero.second : hero.weapon;
   const up = hero.dmgUp && hero.dmgUp.until > T ? 1 + hero.dmgUp.v : 1;
   const off = hasDual() && hero.offhand ? hero.offhand.dmg * (0.4 + 0.1 * rankOf('picaro.ambi')) * wf : 0;
-  return (ab.dmg * rankMul(ab.id) + (hero.weapon.dmg * wf + off) / lvlMul()) * powerMul() * up;
+  return (ab.dmg * rankMul(ab.id) + (W.dmg * wf + off) / lvlMul()) * powerMul() * up;
 }
 function hitMob(m, ab, dmg, color) {
   if (m.dead) return;
@@ -192,14 +217,18 @@ function healHero(n) {
 function areaHit(x, y, r, ab, dmg) { for (const m of mobs) if (!m.dead && Math.hypot(m.x - x, m.y - y) < r) hitMob(m, ab, dmg); }
 function use(i) {
   if (!hero || hero.dead || !playing) return;
-  const id = hero.abil.bar[i]; if (!id) return;
-  const ab = ABIL[id];
+  let id = hero.abil.bar[i]; if (!id) return;
+  let ab = ABIL[id];
+  if (hero.mounted) dismount();
+  // clases a distancia: si el enemigo está pegado, el ataque básico se hace con el arma secundaria
+  if (i === 0 && hasSecond() && hero.second && ab.kind !== 'melee') { const near = nearestMob(70); if (near && Math.hypot(near.x - hero.x, near.y - hero.y) < 70) { ab = SEC_STRIKE; id = ab.id; } }
   if ((hero.cd[id] || 0) > T) return;
   const rng = ab.range || 110;
   const target = nearestMob(['bolt', 'multi', 'charge', 'meteor', 'ground'].includes(ab.kind) ? rng : ab.kind === 'melee' ? 190 : 140);
   if ((ab.kind === 'charge' || ab.kind === 'meteor' || (ab.kind === 'ground' && !ab.self)) && !target) { toast(`${ab.icon} ${ab.name}: no hay ningún enemigo a tu alcance`); return; }
   hero.cd[id] = T + cdOf(ab);
   hero.atkT = 0.22; hero.lastAtk = T; pressSlot(i);
+  if (ab.sec && hero.second) hero.secT = T + 0.7;   // saca la espada/daga un momento
   let mult = 1;
   if (hero.stealth > T && ab.dmg) { mult = hero.stealthMult; hero.stealth = 0; }
   if (target && !['nova', 'heal', 'shield', 'buff', 'stealth', 'blink'].includes(ab.kind)) faceTo(target.x, target.y);
@@ -224,7 +253,7 @@ function use(i) {
       ts.forEach((t, k) => {
         const tx = t ? t.x : hero.x + vx * rng, ty = t ? t.y - 22 : hero.y - 40 + vy * rng;
         const sx = hero.x + vx * 20, sy = hero.y - 46 - k * 6, d = Math.hypot(tx - sx, ty - sy) || 1, sp = ab.speed || 420;
-        shots.push({ dmg, x: sx, y: sy, vx: ((tx - sx) / d) * sp, vy: ((ty - sy) / d) * sp, life: rng / sp + 0.4, ab, c: col, tg: t });
+        shots.push({ dmg, x: sx, y: sy, vx: ((tx - sx) / d) * sp, vy: ((ty - sy) / d) * sp, life: rng / sp + 0.4, ab, c: col, tg: t, arrow: ab.cls === 'cazador' && !ab.big ? (hero.weapon.kind === 'rifle' ? 'bala' : 'flecha') : null });
       });
       break;
     }
@@ -258,7 +287,8 @@ function use(i) {
     }
     case 'blink': {
       fx.push({ k: 'ring', x: hero.x, y: hero.y - 10, r: 40, t: 0, life: 0.4, c: col });
-      for (let s = 0; s < ab.dist; s += 10) { const nx = hero.x + vx * 10, ny = hero.y + vy * 10; if (blocked(nx, ny)) break; hero.x = nx; hero.y = ny; }
+      const [bx, by] = ab.back && target ? (() => { const dx = hero.x - target.x, dy = hero.y - target.y, d = Math.hypot(dx, dy) || 1; return [dx / d, dy / d]; })() : [vx, vy];
+      for (let s = 0; s < ab.dist; s += 10) { const nx = hero.x + bx * 10, ny = hero.y + by * 10; if (blocked(nx, ny)) break; hero.x = nx; hero.y = ny; }
       fx.push({ k: 'ring', x: hero.x, y: hero.y - 10, r: 40, t: 0, life: 0.4, c: col });
       for (const m of mobs) if (m.state === 'chase') m.state = 'back';
       break;

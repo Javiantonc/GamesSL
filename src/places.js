@@ -91,11 +91,12 @@ const ROOMS = {
 /** Personajes de dentro de las casas (posición relativa a la sala). */
 const INSIDE = {
   cuartel: [
-    ['sombra', 'Vex', 'Instructora de pícaros', 170, 330, { gender: 'chica', skin: SKINS[2], hair: '#3a2a24', style: 'coleta', eye: '#3f7a4a', outfit: '#4a4a52', wear: 'leather', hat: 'hooddown', weapon: 'dagger', face: 'decidido' }, 'class:picaro'],
-    ['selene', 'Archimaga Selene', 'Instructora de magos', 340, 300, { gender: 'chica', skin: SKINS[0], hair: '#d9d6cc', style: 'largo', eye: '#3d5a8a', outfit: '#3d5a8a', wear: 'robe', hat: 'wizard', weapon: 'staff', face: 'serio' }, 'class:mago'],
-    ['aldric', 'Sir Aldric', 'Instructor de paladines', 500, 290, { gender: 'chico', skin: SKINS[1], hair: '#e6c068', style: 'corto', eye: '#3d5a8a', outfit: '#c9a24a', wear: 'plate', hat: 'helm', weapon: 'mace', face: 'decidido' }, 'class:paladin'],
-    ['brakka', 'Brakka', 'Instructor de guerreros', 660, 300, { gender: 'chico', skin: SKINS[3], hair: '#a8342a', style: 'pincho', eye: '#6b4226', outfit: '#a8452f', wear: 'mail', hat: 'coif', weapon: 'axe', beard: '#a8342a', face: 'enfadado' }, 'class:guerrero'],
-    ['morwen', 'Morwen', 'Instructora de brujos', 830, 330, { gender: 'chica', skin: '#e8d0e0', hair: '#3a2a3a', style: 'largo', eye: '#7a3a8a', outfit: '#6b4a7a', wear: 'darkrobe', hat: 'hood', weapon: 'dagger', face: 'serio' }, 'class:brujo'],
+    ['kaela', 'Kaela', 'Instructora de cazadores', 120, 370, { gender: 'chica', skin: SKINS[1], hair: '#b5652e', style: 'coleta', eye: '#3f7a4a', outfit: '#6a7a3a', wear: 'leather', hat: 'hooddown', weapon: { kind: 'bow', shape: 'largo' }, face: 'decidido' }, 'class:cazador'],
+    ['sombra', 'Vex', 'Instructora de pícaros', 250, 300, { gender: 'chica', skin: SKINS[2], hair: '#3a2a24', style: 'coleta', eye: '#3f7a4a', outfit: '#4a4a52', wear: 'leather', hat: 'hooddown', weapon: 'dagger', face: 'decidido' }, 'class:picaro'],
+    ['selene', 'Archimaga Selene', 'Instructora de magos', 410, 290, { gender: 'chica', skin: SKINS[0], hair: '#d9d6cc', style: 'largo', eye: '#3d5a8a', outfit: '#3d5a8a', wear: 'robe', hat: 'wizard', weapon: 'staff', face: 'serio' }, 'class:mago'],
+    ['aldric', 'Sir Aldric', 'Instructor de paladines', 570, 290, { gender: 'chico', skin: SKINS[1], hair: '#e6c068', style: 'corto', eye: '#3d5a8a', outfit: '#c9a24a', wear: 'plate', hat: 'helm', weapon: 'mace', face: 'decidido' }, 'class:paladin'],
+    ['brakka', 'Brakka', 'Instructor de guerreros', 730, 300, { gender: 'chico', skin: SKINS[3], hair: '#a8342a', style: 'pincho', eye: '#6b4226', outfit: '#a8452f', wear: 'mail', hat: 'coif', weapon: 'axe', beard: '#a8342a', face: 'enfadado' }, 'class:guerrero'],
+    ['morwen', 'Morwen', 'Instructora de brujos', 880, 370, { gender: 'chica', skin: '#e8d0e0', hair: '#3a2a3a', style: 'largo', eye: '#7a3a8a', outfit: '#6b4a7a', wear: 'darkrobe', hat: 'hood', weapon: 'dagger', face: 'serio' }, 'class:brujo'],
   ],
   portales: [['orvin', 'Maestro Orvin', 'Guardián de portales', 500, 380, VILLAGERS_LOOK('orvin'), 'travel']],
   herreria: [['brunilda', 'Brunilda', 'Herrera · Herrería', 600, 360, VILLAGERS_LOOK('brunilda'), 'prof:herreria']],
@@ -136,7 +137,7 @@ function buildRoom(id) {
   S.doors.push({ x: IW / 2, y: IH - 36, exit: id });
   const F = (key, x, y, solid, arg) => { const img = ART2[key](arg); place(S, img, x, y, { w: img.width / 2, h: img.height / 2, solid, shadow: 0 }); };
   F('plant', 80, 220, null); F('plant', IW - 80, 220, null);
-  if (id === 'cuartel') { F('rack', IW / 2, 200, null); for (const dx of [-330, -160, 160, 330]) F('dummy', IW / 2 + dx, 470, [-14, -10, 28, 10]); }
+  if (id === 'cuartel') { F('rack', IW / 2, 200, null); for (const dx of [-300, -110, 110, 300]) F('dummy', IW / 2 + dx, 520, [-14, -10, 28, 10]); }
   if (id === 'herreria') { F('forge', 260, 220, null); F('anvil', 470, 380, [-44, -26, 88, 24]); F('rack', 760, 200, null); F('chest', 840, 560, [-40, -24, 80, 22]); S.lights.push({ x: 260, y: 200, r: 200, fire: true }); }
   if (id === 'posada') { F('counter', 500, 250, [-120, -40, 240, 38]); for (const [x, y] of [[230, 420], [230, 580], [760, 580]]) F('table', x, y, [-56, -26, 112, 24]); F('shelf', 160, 200, null); S.lights.push({ x: 500, y: 200, r: 180 }); }
   if (id === 'consulta') { F('shelf', 160, 200, null); F('shelf', 290, 200, null); F('bed', 760, 340, [-48, -140, 96, 136]); F('bed', 880, 340, [-48, -140, 96, 136]); F('table', 520, 470, [-56, -26, 112, 24]); }
