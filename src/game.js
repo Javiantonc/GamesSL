@@ -51,6 +51,16 @@ function spawnMonsters() {
     WORLD.mobs.push(makeMob(types[(r() * types.length) | 0], x, y, lvl));
     n++;
   }
+  // jefes del mundo: uno por región, muy fuertes y con gran botín
+  const WB = [['bosque', 'encapuchado', 'Señor del Bosque Sombrío', 0, -2700, 1.6], ['colinas', 'ogro', 'Ogro Rompepiedras', 3500, -500, 1.45], ['costa', 'limo', 'Rey Limo', 1100, 2350, 2.4], ['salvaje', 'gargola', 'Gárgola Ancestral', -3600, -900, 1.6]];
+  for (const [zone, type, name, dx, dy, sc] of WB) {
+    let x = CX + dx, y = CY + dy;
+    for (let k = 0; k < 40 && (inLake(x, y, 120) || safeZone(x, y, 1.3) || (SC = WORLD, blocked(x, y))); k++) { x += 60; y += 35; }
+    const m = makeMob(type, x, y, clamp(mobLvlAt(x, y) + 3, 5, 22));
+    Object.assign(m, { boss: true, worldBoss: true, wbId: zone, sc, name, leash: 700 });
+    m.max = m.hp = m.hp * 8; m.dmg = Math.round(m.dmg * 1.4); m.xp *= 6;
+    WORLD.mobs.push(m);
+  }
 }
 
 /* Botín de cada criatura: material propio (icono, nombre, probabilidad) */
@@ -61,6 +71,7 @@ const MATS_DROP = {
   encapuchado: ['📜', 'Pergamino oscuro', 0.45], ogro: ['🟫', 'Piel de ogro', 0.55], caballero: ['🛡️', 'Placa maldita', 0.5],
 };
 function rollLoot(m) {
+  if (m.boss) return bossLoot(m);
   const D = MONSTERS[m.type], md = MATS_DROP[m.type];
   if (D.animal) {
     const items = [];
@@ -188,7 +199,7 @@ function damageMob(m, n, color = '#ffe46a') {
   if (m.state === 'idle' || m.state === 'back') { m.state = MONSTERS[m.type].flee ? 'flee' : 'chase'; m.fleeT = T + 4; }
   nums.push({ x: m.x, y: m.y - 50, t: 0, txt: n, c: color });
   if (m.hp <= 0) {
-    m.dead = true; m.respawn = m.noRespawn ? Infinity : T + 12;
+    m.dead = true; m.respawn = m.noRespawn || (m.boss && !m.worldBoss) ? Infinity : m.worldBoss ? T + 300 : T + 12;
     if (m.boss) onBossKilled(m);
     for (let i = 0; i < 12; i++) fx.push({ k: 'p', x: m.x, y: m.y - 30, vx: (Math.random() - 0.5) * 160, vy: -Math.random() * 140, t: 0, life: 0.6, c: MONSTERS[m.type].skin });
     gainXp(m.xp);
@@ -265,7 +276,7 @@ function update(dt) {
   updateWorldStuff(dt); updateZones(dt);
   for (const m of mobs) {
     if (!m.dead && m.state === 'idle' && Math.abs(m.x - hero.x) + Math.abs(m.y - hero.y) > 1600) continue;
-    if (m.dead) { if (T > m.respawn && (!m.loot || !m.loot.length || T - m.deadAt > 60) && Math.hypot(m.hx - hero.x, m.hy - hero.y) > 400) { Object.assign(m, { dead: false, hp: m.max, x: m.hx, y: m.hy, state: 'idle', dots: [], loot: null }); if (lootOf === m) closeLoot(); } continue; }
+    if (m.dead) { if (T > m.respawn && (!m.loot || !m.loot.length || T - m.deadAt > (m.boss ? 240 : 60)) && Math.hypot(m.hx - hero.x, m.hy - hero.y) > 400) { Object.assign(m, { dead: false, hp: m.max, x: m.hx, y: m.hy, state: 'idle', dots: [], loot: null }); if (lootOf === m) closeLoot(); } continue; }
     for (let i = m.dots.length - 1; i >= 0; i--) { const d = m.dots[i]; if (T >= d.next) { d.next += 1; d.n--; damageMob(m, d.d, d.c); } if (d.n <= 0) m.dots.splice(i, 1); }
     if (m.dead) continue;
     if (m.stunT > T) { m.hit -= dt; continue; }
@@ -357,6 +368,12 @@ function draw() {
     ctx.save(); ctx.globalAlpha = 0.85; ctx.filter = 'saturate(0.5) brightness(0.8)';
     if (D.animal) { ctx.translate(m.x, m.y - D.top * s * 0.7); ctx.scale(m.flip ? -1 : 1, -1); } else { ctx.translate(m.x, m.y - 10); ctx.rotate(m.flip ? -1.45 : 1.45); }
     ctx.drawImage(monsterSprite(m.type, 0, false), -FX * s, -FY * s * 0.9, TW * s, TH * s); ctx.restore(); ctx.filter = 'none';
+    if (m.boss && m.loot.length) {   // columna de luz sobre el botín del jefe
+      const g = ctx.createLinearGradient(0, m.y - 260, 0, m.y); g.addColorStop(0, 'rgba(255,210,90,0)'); g.addColorStop(1, `rgba(255,210,90,${0.45 + Math.sin(T * 4) * 0.15})`);
+      ctx.fillStyle = g; ctx.fillRect(m.x - 22, m.y - 260, 44, 260);
+      for (let k = 0; k < 6; k++) { const p = (T * 0.5 + k / 6) % 1; ctx.globalAlpha = 1 - p; ctx.fillStyle = k % 2 ? '#ffe46a' : '#c070ff'; ctx.beginPath(); ctx.arc(m.x + Math.sin(k * 2 + T * 2) * 16, m.y - 20 - p * 220, 3, 0, 7); ctx.fill(); }
+      ctx.globalAlpha = 1;
+    }
     if (m.loot.length) for (let k = 0; k < 4; k++) {
       const a = T * 2 + k * 1.6, r = 18 + Math.sin(T * 3 + k) * 4;
       ctx.fillStyle = `rgba(255, 220, 90, ${0.55 + Math.sin(T * 5 + k) * 0.35})`;

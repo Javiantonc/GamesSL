@@ -38,23 +38,33 @@ function enterPortal(P) {
   place(D, portalArt(P.col), D.doors[0].x, D.doors[0].y, { w: 120, h: 128, portal: { col: P.col } });
   enterScene(D, D.start.x, D.start.y);
 }
+/** Botín de un jefe (de mazmorra o del mundo): siempre muy bueno. */
+function bossLoot(m) {
+  const first = !!m.first, lvl = m.lvl, items = [];
+  items.push({ kind: 'gold', n: (first ? 40 : 18) + lvl * (first ? 12 : 6) });
+  const legend = Math.random() < (first ? 0.35 : 0.14);
+  const ultra = Math.random() < (first ? 0.03 + lvl * 0.004 : 0.02);   // los jefes más fuertes pueden dar ultralegendarias
+  items.push({ kind: 'weapon', w: makeWeapon(hero.cls, lvl + 1, ultra ? 5 : legend ? 4 : 3) });
+  items.push({ kind: 'gear', g: makeGear(hero.cls, lvl + 1, 3) });
+  items.push({ kind: 'gear', g: makeGear(hero.cls, lvl + 1, first && Math.random() < 0.3 ? 4 : Math.random() < 0.5 ? 3 : 2) });
+  if (SECONDARY[hero.cls] && Math.random() < 0.35) items.push({ kind: 'weapon', w: makeSecondary(hero.cls, lvl + 1, 3) });
+  items.push({ kind: 'potion', icon: '🧪', name: 'Poción de vida', n: 2 });
+  if (Math.random() < 0.6) { const t = clamp(Math.ceil(lvl / 4), 1, 5); items.push({ kind: 'res', res: 'ore', t, n: 3, icon: '⛏️', name: resName('ore', t) }); }
+  return items;
+}
 function onBossKilled(m) {
+  if (m.worldBoss) {
+    m.first = !hero.done.includes('wb:' + m.wbId); if (m.first) hero.done.push('wb:' + m.wbId);
+    nums.push({ x: m.x, y: m.y - 170, t: 0, txt: `¡${m.name} derrotado!`, c: '#ffb0ff', big: true });
+    toast(`🏆 <b>¡Has derrotado a ${m.name}!</b> Ha dejado un gran botín: acércate y pulsa 💰 / E. Volverá dentro de 5 minutos.`);
+    save(); return;
+  }
   const P = SC.portal, first = !hero.done[P.i];
-  hero.done[P.i] = true;
-  timers.push({ t: T, fn: () => {
-    m.loot.push({ kind: 'gold', n: (first ? 40 : 15) + P.lvl * (first ? 12 : 5) });
-    // el jefe siempre suelta un arma épica (o legendaria) y dos piezas de armadura muy buenas
-    const legend = Math.random() < (first ? 0.35 : 0.12);
-    const ultra = Math.random() < (first ? 0.04 + P.i * 0.012 : 0.02);   // las mazmorras más difíciles pueden dar ultralegendarias
-    m.loot.push({ kind: 'weapon', w: makeWeapon(hero.cls, P.lvl + 2, ultra ? 5 : legend ? 4 : 3) });
-    m.loot.push({ kind: 'gear', g: makeGear(hero.cls, P.lvl + 2, 3) });
-    m.loot.push({ kind: 'gear', g: makeGear(hero.cls, P.lvl + 2, first && Math.random() < 0.3 ? 4 : Math.random() < 0.5 ? 3 : 2) });
-    m.loot.push({ kind: 'potion', icon: '🧪', name: 'Poción de vida', n: 2 });
-  } });
+  hero.done[P.i] = true; m.first = first;
   const R = SC.bossRoom, d = { x: R.x + R.w / 2, y: R.y + R.h - 50, exit: 'dungeon' };
   SC.doors.push(d); place(SC, portalArt(P.col), d.x, d.y, { w: 120, h: 128, portal: { col: P.col } });
   nums.push({ x: m.x, y: m.y - 170, t: 0, txt: `¡${m.name} derrotado!`, c: '#ffb0ff', big: true });
-  toast(`🏆 <b>¡Mazmorra ${P.name} completada!</b>${first ? ' Primera vez: botín extra.' : ''} Saquea al guardián y sal por el portal.`);
+  toast(`🏆 <b>¡Mazmorra ${P.name} completada!</b>${first ? ' Primera vez: botín extra.' : ''} El guardián ha dejado un gran botín: acércate y pulsa 💰 / E. Luego sal por el portal.`);
   save();
 }
 
@@ -422,6 +432,7 @@ function drawMapTo(cn, x0, y0, w, h, big) {
   if (big) {
     x.font = 'bold 15px Trebuchet MS';
     const lab = (t, wx, wy) => { const [px, py] = P(wx, wy); if (!SEEN[Math.floor(wy / 100) * SEEN_W + Math.floor(wx / 100)]) return; x.lineWidth = 4; x.strokeStyle = '#2a2220'; x.strokeText(t, px, py); x.fillStyle = '#ffd27a'; x.fillText(t, px, py); };
+    for (const m of WORLD.mobs) if (m.worldBoss && SEEN[Math.floor(m.hy / 100) * SEEN_W + Math.floor(m.hx / 100)]) { const [px, py] = P(m.hx, m.hy); x.font = '18px sans-serif'; x.fillText(m.dead ? '✔️' : '💀', px, py + 6); x.font = 'bold 12px Trebuchet MS'; x.lineWidth = 4; x.strokeStyle = '#2a2220'; const tx = `${m.name} · Nv ${m.lvl}`; x.strokeText(tx, px, py + 22); x.fillStyle = '#ffb0ff'; x.fillText(tx, px, py + 22); }
     for (const t of TOWNS) if (hero.towns.includes(t.id)) { const [px, py] = P(t.x, t.y); x.font = '18px sans-serif'; x.fillText(t.main ? '🏰' : '🏘️', px, py + 6); x.font = 'bold 15px Trebuchet MS'; x.lineWidth = 4; x.strokeStyle = '#2a2220'; x.strokeText(t.name, px, py - 16); x.fillStyle = '#fff'; x.fillText(t.name, px, py - 16); } lab(ZONES.bosque.name, CX - 1700, CY - 1500); lab(ZONES.colinas.name, CX + 3200, CY - 1000); lab(ZONES.costa.name, CX + 1900, CY + 1700); lab(ZONES.salvaje.name, CX - 3200, CY - 1000);
   }
   const [hx, hy] = P(hero.x, hero.y);
