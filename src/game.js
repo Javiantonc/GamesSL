@@ -91,6 +91,7 @@ addEventListener('keydown', (e) => {
   if (e.code === 'KeyX' || e.code === 'Digit7') throwBomb();
   if (e.code === 'KeyM') toggleMap();
   if (e.code === 'KeyC') openChar();
+  if (e.code === 'Tab') { e.preventDefault(); cycleTarget(); }
   if (e.code === 'KeyV' || e.code === 'Digit8') eatFood();
   if (e.code === 'KeyP' || e.code === 'KeyL') openProfs();
   if (e.code === 'Escape') closeWin();
@@ -103,7 +104,15 @@ addEventListener('keydown', (e) => {
   if (e.code === 'KeyK') openBook(0);
 });
 addEventListener('keyup', (e) => keys.delete(e.code));
-cv.addEventListener('pointerdown', (e) => { if (playing && e.pointerType !== 'touch') use(0); });
+cv.addEventListener('pointerdown', (e) => {
+  if (!playing) return;
+  // tocar o hacer clic sobre un monstruo lo fija como objetivo
+  const wx = CAM.x + e.clientX / Z, wy = CAM.y + e.clientY / Z;
+  let pick = null, bd = 70;
+  for (const m of mobs) if (!m.dead) { const d = Math.hypot(m.x - wx, m.y - 40 * MONSTERS[m.type].size - wy); if (d < bd) { bd = d; pick = m; } }
+  if (pick) hero.target = pick;
+  if (e.pointerType !== 'touch') use(0);
+});
 
 function blocked(x, y) {
   if (x < 20 || y < 60 || x > SC.W - 20 || y > SC.H - 10) return true;
@@ -134,11 +143,27 @@ function talk() {
 /* -------------------------------------------------------------- combate */
 const lvlMul = () => 1 + (hero.lvl - 1) * 0.15;
 const xpNeed = (l) => Math.floor(30 * Math.pow(l, 1.5));
+/** Autoapuntado: mantiene el objetivo fijado; si no hay, elige el enemigo más cercano
+ *  (prefiere los que te atacan antes que los animales tranquilos). */
 function nearestMob(r) {
-  let best = null, bd = r;
-  for (const m of mobs) { if (m.dead) continue; const d = Math.hypot(m.x - hero.x, m.y - hero.y); if (d < bd) { bd = d; best = m; } }
+  const t = hero.target;
+  if (t && !t.dead && mobs.includes(t) && Math.hypot(t.x - hero.x, t.y - hero.y) < r * 1.3) return t;
+  let best = null, bd = Infinity;
+  for (const m of mobs) {
+    if (m.dead) continue;
+    const d = Math.hypot(m.x - hero.x, m.y - hero.y); if (d > r) continue;
+    const score = d - (m.state === 'chase' ? 140 : 0) + (MONSTERS[m.type].passive && m.state === 'idle' ? 60 : 0);
+    if (score < bd) { bd = score; best = m; }
+  }
+  if (best) hero.target = best;
   return best;
 }
+function cycleTarget() {
+  const list = mobs.filter((m) => !m.dead && Math.hypot(m.x - hero.x, m.y - hero.y) < 420).sort((a, b) => Math.hypot(a.x - hero.x, a.y - hero.y) - Math.hypot(b.x - hero.x, b.y - hero.y));
+  if (!list.length) return;
+  hero.target = list[(list.indexOf(hero.target) + 1) % list.length];
+}
+let CAM = { x: 0, y: 0 };
 function faceTo(x, y) { const dx = x - hero.x, dy = y - hero.y; if (Math.abs(dx) > Math.abs(dy)) { hero.dir = 2; hero.flip = dx < 0; } else hero.dir = dy < 0 ? 1 : 0; }
 const facingVec = () => (hero.dir === 2 ? [hero.flip ? -1 : 1, 0] : hero.dir === 1 ? [0, -1] : [0, 1]);
 function damageMob(m, n, color = '#ffe46a') {
@@ -237,6 +262,10 @@ function update(dt) {
     const s = shots[i];
     s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt;
     if (Math.random() < 0.8) fx.push({ k: 'p', x: s.x, y: s.y, vx: 0, vy: -20, t: 0, life: 0.3, c: s.c });
+    if (s.tg && !s.tg.dead) {   // proyectil teledirigido hacia su objetivo
+      const dx = s.tg.x - s.x, dy = s.tg.y - 22 - s.y, d = Math.hypot(dx, dy) || 1, sp = Math.hypot(s.vx, s.vy), k = Math.min(1, dt * 8);
+      s.vx += ((dx / d) * sp - s.vx) * k; s.vy += ((dy / d) * sp - s.vy) * k; s.life = Math.max(s.life, 0.1);
+    }
     let hit = null;
     for (const m of mobs) if (!m.dead && Math.hypot(m.x - s.x, m.y - 22 - s.y) < 28) { hit = m; break; }
     if (hit) {
@@ -265,6 +294,7 @@ function draw() {
   const fxp = hero ? hero.x : CX, fyp = hero ? hero.y : CY + 120;
   const camX = SC.W <= vw ? (SC.W - vw) / 2 : Math.min(SC.W - vw, Math.max(0, fxp - vw / 2));
   const camY = SC.H <= vh ? (SC.H - vh) / 2 : Math.min(SC.H - vh, Math.max(0, fyp - 40 - vh / 2));
+  CAM = { x: camX, y: camY };
   X = ctx;
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#120e12'; ctx.fillRect(0, 0, cv.width, cv.height);
   ctx.setTransform(DPR * Z, 0, 0, DPR * Z, -camX * DPR * Z, -camY * DPR * Z);
@@ -304,6 +334,14 @@ function draw() {
     }
   }
   drawZones(ctx);
+  const tg = hero && hero.target;
+  if (tg && !tg.dead && mobs.includes(tg) && Math.hypot(tg.x - hero.x, tg.y - hero.y) < 520) {   // marca del objetivo
+    const s = MONSTERS[tg.type].size * (tg.sc || 1), r = 30 * s;
+    ctx.strokeStyle = '#ff4a3a'; ctx.lineWidth = 3.5; ctx.globalAlpha = 0.85;
+    ctx.beginPath(); ctx.ellipse(tg.x, tg.y - 2, r, r * 0.36, 0, 0, 7); ctx.stroke();
+    for (let k = 0; k < 4; k++) { const a = T * 1.5 + k * Math.PI / 2; ctx.beginPath(); ctx.moveTo(tg.x + Math.cos(a) * (r + 4), tg.y - 2 + Math.sin(a) * (r + 4) * 0.36); ctx.lineTo(tg.x + Math.cos(a) * (r + 13), tg.y - 2 + Math.sin(a) * (r + 13) * 0.36); ctx.stroke(); }
+    ctx.globalAlpha = 1;
+  }
   const list = [];
   for (const o of SC.objects) if (inView(o.x, o.y, o.w, o.h)) list.push({ y: o.y, o });
   for (const nd of SC.nodes) if (nd.kind !== 'fish' && T > nd.ready && inView(nd.x, nd.y, 60, 80)) list.push({ y: nd.y, nd });
@@ -450,7 +488,7 @@ function buildBar() {
   document.getElementById('foodbtn').addEventListener('pointerdown', (e) => { e.preventDefault(); eatFood(); });
   document.getElementById('bombbtn').addEventListener('pointerdown', (e) => { e.preventDefault(); throwBomb(); });
   bar2.querySelectorAll('.slot[data-s]').forEach((b) => b.addEventListener('pointerdown', (e) => { e.preventDefault(); if (hero.abil.bar[+b.dataset.s]) use(+b.dataset.s); else openBook(+b.dataset.s); }));
-  document.getElementById('tip').innerHTML = 'Habilidades: Espacio/clic, Q, R, F, T (o 1-5) · E: interactuar · K: libro de habilidades · B: bolsa · C: personaje · P: profesiones · M: mapa';
+  document.getElementById('tip').innerHTML = 'Autoapuntado activado (Tab o clic en un monstruo para cambiar de objetivo) · Habilidades: Espacio/clic, Q, R, F, T (o 1-5) · E: interactuar · K: libro de habilidades · B: bolsa · C: personaje · P: profesiones · M: mapa';
 }
 function pressSlot(s) { const b = bar2.querySelector(`[data-s="${s}"]`); if (!b) return; b.classList.add('press'); setTimeout(() => b.classList.remove('press'), 120); }
 function hud() {

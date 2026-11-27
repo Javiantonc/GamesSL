@@ -196,14 +196,20 @@ function use(i) {
   const ab = ABIL[id];
   if ((hero.cd[id] || 0) > T) return;
   const rng = ab.range || 110;
-  const target = nearestMob(['bolt', 'multi', 'charge', 'meteor', 'ground'].includes(ab.kind) ? rng : 110);
+  const target = nearestMob(['bolt', 'multi', 'charge', 'meteor', 'ground'].includes(ab.kind) ? rng : ab.kind === 'melee' ? 190 : 140);
   if ((ab.kind === 'charge' || ab.kind === 'meteor' || (ab.kind === 'ground' && !ab.self)) && !target) { toast(`${ab.icon} ${ab.name}: no hay ningún enemigo a tu alcance`); return; }
   hero.cd[id] = T + cdOf(ab);
   hero.atkT = 0.22; pressSlot(i);
   let mult = 1;
   if (hero.stealth > T && ab.dmg) { mult = hero.stealthMult; hero.stealth = 0; }
   if (target && !['nova', 'heal', 'shield', 'buff', 'stealth', 'blink'].includes(ab.kind)) faceTo(target.x, target.y);
-  const [vx, vy] = facingVec(), dmg = ab.dmg ? abDmg(ab) * mult : 0, col = ab.color || '#ffffff';
+  // autoapuntado: si el objetivo está un poco lejos para un golpe cuerpo a cuerpo, das un paso hacia él
+  if (target && ab.kind === 'melee') {
+    const d = Math.hypot(target.x - hero.x, target.y - hero.y), reach = ab.range + 24;
+    if (d > reach) { const st = Math.min(80, d - reach + 6), nx = hero.x + ((target.x - hero.x) / d) * st, ny = hero.y + ((target.y - hero.y) / d) * st; if (!blocked(nx, ny)) { hero.x = nx; hero.y = ny; } }
+  }
+  const aim = target && !['nova', 'heal', 'shield', 'buff', 'stealth', 'blink'].includes(ab.kind) ? (() => { const dx = target.x - hero.x, dy = target.y - hero.y, d = Math.hypot(dx, dy) || 1; return [dx / d, dy / d]; })() : null;
+  const [vx, vy] = aim || facingVec(), dmg = ab.dmg ? abDmg(ab) * mult : 0, col = ab.color || '#ffffff';
   const R = rankMul(id);
   switch (ab.kind) {
     case 'melee': {
@@ -218,7 +224,7 @@ function use(i) {
       ts.forEach((t, k) => {
         const tx = t ? t.x : hero.x + vx * rng, ty = t ? t.y - 22 : hero.y - 40 + vy * rng;
         const sx = hero.x + vx * 20, sy = hero.y - 46 - k * 6, d = Math.hypot(tx - sx, ty - sy) || 1, sp = ab.speed || 420;
-        shots.push({ dmg, x: sx, y: sy, vx: ((tx - sx) / d) * sp, vy: ((ty - sy) / d) * sp, life: rng / sp + 0.15, ab, c: col });
+        shots.push({ dmg, x: sx, y: sy, vx: ((tx - sx) / d) * sp, vy: ((ty - sy) / d) * sp, life: rng / sp + 0.4, ab, c: col, tg: t });
       });
       break;
     }
