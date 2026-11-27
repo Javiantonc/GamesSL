@@ -25,7 +25,7 @@ function spawnAnimals() {
   const r = wrng(808);
   for (let n = 0, tries = 0; n < 170 && tries < 30000; tries++) {
     const x = 80 + r() * (WORLD_W - 160), y = 160 + r() * (WORLD_H - 220);
-    if (villageZone(x, y, 1.1) || inLake(x, y, 30) || onPath(x, y, 0)) continue;
+    if (safeZone(x, y, 1.1) || inLake(x, y, 30) || onPath(x, y, 0)) continue;
     SC = WORLD; if (blocked(x, y)) continue;
     let z = zoneAt(x, y);
     if (inLake(x, y, 260)) z = 'costa';

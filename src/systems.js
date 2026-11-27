@@ -167,7 +167,8 @@ const head = (t) => `<header><b>${t}</b><span class="purse2">🪙 ${hero.gold}</
 function bind(sel, fn) { winEl.querySelectorAll(sel).forEach((b) => (b.onclick = () => fn(b.dataset))); }
 function openRole(n) {
   const role = n.V.role;
-  if (role === 'shop') return openShop('buy');
+  if (role === 'shop') { shopWho = n.V.name; return openShop('buy'); }
+  if (role === 'flight') return openFlight(n);
   if (role.startsWith('prof:')) return openTrainer(role.slice(5), n);
   if (role.startsWith('class:')) return openClassTrainer(role.slice(6), n);
   if (role === 'inn') return openInn(n);
@@ -175,7 +176,7 @@ function openRole(n) {
 }
 
 /* mercader */
-let stock = null, stockLvl = 0;
+let stock = null, stockLvl = 0, shopWho = 'Tobías';
 function shopStock() {
   if (!stock || stockLvl !== hero.lvl || stock.cls !== hero.cls) {
     stock = [0, 1, 1, 2].map((r, i) => makeWeapon(hero.cls, hero.lvl + (i > 1 ? 1 : 0), r)); stock.cls = hero.cls; stockLvl = hero.lvl;
@@ -217,7 +218,7 @@ function openShop(tab) {
     if (hero.potions) body += `<div class="lrow"><span class="li">🧪</span><b>Poción de vida<small>×${hero.potions} · 5 🪙 cada una</small></b><button class="ghost" data-sp>Vender 1</button></div>`;
     if (hero.bag.length) body += '<h4>Armas y armaduras de la bolsa</h4>' + hero.bag.map((w) => `<div class="lrow"><img src="${itemIcon(w).toDataURL()}"><b style="color:${RARITY[w.rarity].color}">${w.name}<small>${w.slot ? gearStats(w) || gearDesc(w) : 'Daño ' + w.dmg}</small></b><button class="ghost" data-sw="${w.id}">${sellItem(w)} 🪙</button></div>`).join('');
   }
-  openWin(`${head('🛒 Tobías · Mercader')}${tabs}<div class="wbody">${body}</div>`);
+  openWin(`${head(`🛒 ${shopWho} · Mercader`)}${tabs}<div class="wbody">${body}</div>`);
   bind('[data-tab]', (d) => openShop(d.tab));
   const pay = (n) => { if (hero.gold < n) { toast('No tienes oro suficiente'); return false; } hero.gold -= n; return true; };
   const done = (t) => { save(); renderBag(); openShop(t); };
@@ -318,6 +319,21 @@ function openTravel(n) {
   bind('[data-go]', (d) => { if (hero.gold < 10) { toast('No tienes oro suficiente'); return; } hero.gold -= 10; const p = PORTALS[+d.go]; enterScene(WORLD, p.x, p.y + 90); save(); });
 }
 
+/* rutas de grifo entre pueblos */
+function openFlight(n) {
+  const here = townAt(n.x, n.y, 1.2);
+  const rows = TOWNS.map((t) => {
+    const known = hero.towns.includes(t.id), cost = t.main ? 5 : 10;
+    return `<div class="lrow ${known ? '' : 'locked'}"><span class="li">${t.main ? '🏰' : '🏘️'}</span><b>${known ? t.name : '???'}<small>${t.main ? 'Pueblo principal' : known ? ZONES[t.zone].name : 'Aún no lo has descubierto'}</small></b>${here && here.id === t.id ? '<em>Estás aquí</em>' : known ? `<button class="ghost" data-fly="${t.id}">Volar · ${cost} 🪙</button>` : ''}</div>`;
+  }).join('');
+  openWin(`${head(`🦅 ${n.V.name} · Rutas de grifo`)}<div class="wbody"><p class="sub">Mis grifos te llevan a cualquier pueblo que ya hayas visitado. Explora el mapa para descubrir más.</p>${rows}</div>`);
+  bind('[data-fly]', (d) => {
+    const t = TOWNS.find((q) => q.id === d.fly), cost = t.main ? 5 : 10;
+    if (hero.gold < cost) { toast('No tienes oro suficiente'); return; }
+    hero.gold -= cost; closeWin(); enterScene(WORLD, t.x, t.y + 230); toast(`🦅 Has volado a <b>${t.name}</b>`); save();
+  });
+}
+
 /* ------------------------------------------------------------------ bombas */
 function throwBomb() {
   if (!hero || hero.dead || !playing) return;
@@ -350,8 +366,9 @@ function updateWorldStuff(dt) {
   markSeen(hero.x, hero.y);
   if ((zoneT -= dt) < 0) {
     zoneT = 0.5;
-    const z = villageZone(hero.x, hero.y, 1.1) ? 'pueblo' : zoneAt(hero.x, hero.y);
-    if (hero.zone && z !== hero.zone) { const L = mobLvlAt(hero.x, hero.y); toast(z === 'pueblo' ? '🏠 <b>Albor</b> · zona segura' : `🗺️ <b>${ZONES[z].name}</b> · monstruos de nivel ${Math.max(1, L - 1)}-${L + 2}`); }
+    const town = townAt(hero.x, hero.y, 1.05), z = town ? 'town:' + town.id : zoneAt(hero.x, hero.y);
+    if (town && !hero.towns.includes(town.id)) { hero.towns.push(town.id); toast(`🏘️ ¡Has descubierto <b>${town.name}</b>! Ya puedes viajar aquí en grifo desde cualquier pueblo.`); save(); }
+    if (hero.zone && z !== hero.zone) { const L = mobLvlAt(hero.x, hero.y); toast(town ? `🏠 <b>${town.name}</b> · zona segura` : `🗺️ <b>${ZONES[z].name}</b> · monstruos de nivel ${Math.max(1, L - 1)}-${L + 2}`); }
     hero.zone = z;
     for (const p of PORTALS) if (!hero.found.includes(p.i) && Math.hypot(p.x - hero.x, p.y - hero.y) < 900) {
       hero.found.push(p.i);
@@ -380,7 +397,7 @@ function buildMapBase() {
   x.fillStyle = '#c9a46a'; for (let y = 0; y < WORLD_H; y += 40) for (let xx = 0; xx < WORLD_W; xx += 40) if (onPath(xx, y)) x.fillRect(xx * k - 1, y * k - 1, 3, 3);
   for (const L of LAKES) { x.beginPath(); x.ellipse(L.x * k, L.y * k, L.rx * k, L.ry * k, 0, 0, 7); x.fillStyle = '#4f8ac0'; x.fill(); x.lineWidth = 1.5; x.strokeStyle = '#2a2220'; x.stroke(); }
   x.fillStyle = '#2f5f3a'; for (const o of WORLD.objects) if (o.tree) x.fillRect(o.x * k - 1, o.y * k - 2, 2.4, 2.4);
-  x.beginPath(); x.ellipse(CX * k, (CY + 60) * k, 40 * 0.8, 30 * 0.8, 0, 0, 7); x.fillStyle = '#e8d8a8'; x.fill(); x.lineWidth = 2; x.strokeStyle = '#6b4a22'; x.stroke();
+  for (const t of TOWNS) { x.beginPath(); x.ellipse(t.x * k, t.y * k, t.main ? 32 : 20, t.main ? 24 : 15, 0, 0, 7); x.fillStyle = '#e8d8a8'; x.fill(); x.lineWidth = 2; x.strokeStyle = '#6b4a22'; x.stroke(); }
   MAPBASE = c;
 }
 function drawMapTo(cn, x0, y0, w, h, big) {
@@ -401,7 +418,7 @@ function drawMapTo(cn, x0, y0, w, h, big) {
   if (big) {
     x.font = 'bold 15px Trebuchet MS';
     const lab = (t, wx, wy) => { const [px, py] = P(wx, wy); if (!SEEN[Math.floor(wy / 100) * SEEN_W + Math.floor(wx / 100)]) return; x.lineWidth = 4; x.strokeStyle = '#2a2220'; x.strokeText(t, px, py); x.fillStyle = '#ffd27a'; x.fillText(t, px, py); };
-    lab('Albor', CX, CY + 40); lab(ZONES.bosque.name, CX, CY - 2200); lab(ZONES.colinas.name, CX + 3000, CY); lab(ZONES.costa.name, CX + 400, CY + 2000); lab(ZONES.salvaje.name, CX - 3000, CY - 300);
+    for (const t of TOWNS) if (hero.towns.includes(t.id)) { const [px, py] = P(t.x, t.y); x.font = '18px sans-serif'; x.fillText(t.main ? '🏰' : '🏘️', px, py + 6); x.font = 'bold 15px Trebuchet MS'; x.lineWidth = 4; x.strokeStyle = '#2a2220'; x.strokeText(t.name, px, py - 16); x.fillStyle = '#fff'; x.fillText(t.name, px, py - 16); } lab(ZONES.bosque.name, CX - 1700, CY - 1500); lab(ZONES.colinas.name, CX + 3200, CY - 1000); lab(ZONES.costa.name, CX + 1900, CY + 1700); lab(ZONES.salvaje.name, CX - 3200, CY - 1000);
   }
   const [hx, hy] = P(hero.x, hero.y);
   x.beginPath(); x.arc(hx, hy, big ? 7 : 5, 0, 7); x.fillStyle = '#ffe46a'; x.fill(); x.lineWidth = 2.4; x.strokeStyle = '#2a2220'; x.stroke();

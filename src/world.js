@@ -55,7 +55,20 @@ const inLake = (x, y, m = 0) => { for (const L of LAKES) if (((x - L.x) / (L.rx 
 const inPond = inLake;
 const roadV = (x, y, w = 34) => Math.abs(x - CX - Math.sin(y * 0.004) * 30 - Math.sin(y * 0.0011) * 140 * Math.min(1, Math.abs(y - CY) / 1500)) < w;
 const roadH = (x, y, w = 34) => Math.abs(y - CY - 60 - Math.sin(x * 0.0035) * 26 - Math.sin(x * 0.0009) * 120 * Math.min(1, Math.abs(x - CX) / 1500)) < w;
-const plaza = (x, y, m = 0) => ((x - CX) / (250 + m)) ** 2 + ((y - CY - 40) / (165 + m)) ** 2 < 1;
+// centro de cada carretera (para colocar los pueblos encima)
+const roadX = (y) => CX + Math.sin(y * 0.004) * 30 + Math.sin(y * 0.0011) * 140 * Math.min(1, Math.abs(y - CY) / 1500);
+const roadY = (x) => CY + 60 + Math.sin(x * 0.0035) * 26 + Math.sin(x * 0.0009) * 120 * Math.min(1, Math.abs(x - CX) / 1500);
+/* Pueblos: Albor en el centro y uno más pequeño en cada región, sobre las carreteras. */
+const TOWNS = [
+  { id: 'albor', name: 'Albor', x: CX, y: CY + 40, rx: 820, ry: 600, main: true },
+  { id: 'roble', name: 'Refugio del Roble', y: CY - 2050, zone: 'bosque', seed: 11 },
+  { id: 'pico', name: 'Picoférreo', x: CX + 2650, zone: 'colinas', seed: 22 },
+  { id: 'lirio', name: 'Puerto Lirio', y: CY + 1850, zone: 'costa', seed: 33 },
+  { id: 'viento', name: 'Campamento Viento', x: CX - 2350, zone: 'salvaje', seed: 44 },
+].map((t) => (t.main ? t : { ...t, x: t.x ?? roadX(t.y), y: t.y ?? roadY(t.x) - 60, rx: 560, ry: 420 }));
+const plaza = (x, y, m = 0) => TOWNS.some((t) => ((x - t.x) / ((t.main ? 250 : 190) + m)) ** 2 + ((y - t.y) / ((t.main ? 165 : 125) + m)) ** 2 < 1);
+const townAt = (x, y, k = 1) => TOWNS.find((t) => ((x - t.x) / (t.rx * k)) ** 2 + ((y - t.y - (t.main ? 20 : 0)) / (t.ry * k)) ** 2 < 1);
+const safeZone = (x, y, k = 1) => !!townAt(x, y, k);
 const onPath = (x, y, m = 0) => (plaza(x, y, m) || roadV(x, y, 34 + m) || roadH(x, y, 34 + m)) && !inLake(x, y, 30);
 const villageZone = (x, y, k = 1) => ((x - CX) / (820 * k)) ** 2 + ((y - CY - 60) / (600 * k)) ** 2 < 1;
 
@@ -134,11 +147,11 @@ function buildChunk(i, j) {
     if (!onPath(px, py, -6)) continue;
     const s = 2 + r() * 4; x.beginPath(); x.ellipse(px, py, s, s * 0.7, 0, 0, 7); x.fillStyle = r() > 0.5 ? '#b8935a' : '#ddbb82'; x.fill();
   }
-  // losas de la plaza
-  if (Math.abs(x0 + CH / 2 - CX) < CH && Math.abs(y0 + CH / 2 - CY) < CH) {
-    const p = wrng(77);
-    for (let k = 0; k < 160; k++) {
-      const a = p() * Math.PI * 2, d = Math.sqrt(p()), px = CX + Math.cos(a) * 230 * d, py = CY + 40 + Math.sin(a) * 150 * d, w = 26 + p() * 8, h = 16 + p() * 4, cc = p() > 0.5;
+  // losas de las plazas
+  for (const T0 of TOWNS) if (Math.abs(x0 + CH / 2 - T0.x) < CH && Math.abs(y0 + CH / 2 - T0.y) < CH) {
+    const p = wrng(77 + (T0.seed || 0)), big = T0.main ? 1 : 0.76;
+    for (let k = 0; k < (T0.main ? 160 : 100); k++) {
+      const a = p() * Math.PI * 2, d = Math.sqrt(p()), px = T0.x + Math.cos(a) * 230 * big * d, py = T0.y + Math.sin(a) * 150 * big * d, w = 26 + p() * 8, h = 16 + p() * 4, cc = p() > 0.5;
       x.beginPath(); x.roundRect(px - 14, py - 9, w, h, 5); x.fillStyle = cc ? '#b9a98a' : '#a8987a'; x.fill(); x.lineWidth = 2; x.strokeStyle = '#8a7a5e'; x.stroke();
     }
   }
@@ -265,9 +278,31 @@ const PORTALS = [
 ].map(([name, col], i) => {
   const a = i * 2.4 + 0.6, d = 1300 + i * 330;
   let x = CX + Math.cos(a) * d, y = CY + Math.sin(a) * d * 0.66;
-  for (let k = 0; k < 30 && (inLake(x, y, 140) || onPath(x, y, 80)); k++) { x += 70; y += 40; }
+  for (let k = 0; k < 60 && (inLake(x, y, 140) || onPath(x, y, 80) || townAt(x, y, 1.35)); k++) { x += 70; y += 40; }
   return { i, name, col, x: clamp(x, 300, WORLD_W - 300), y: clamp(y, 400, WORLD_H - 200), lvl: 2 + i * 2 };
 });
+
+/* ------------------------------------------------------- pueblos pequeños */
+function placeTown(S, T0) {
+  const A = VILLAGE.ART, r = wrng(T0.seed), s = 1.35;
+  const keys = ['v_house_blue', 'v_house_purple', 'v_house_red', 'v_house_green', 'v_house_inn'];
+  const spots = [[-330, -170], [330, -170], [-360, 330], [360, 330]];
+  spots.forEach(([dx, dy], i) => {
+    const img = A[keys[(i + T0.seed) % keys.length]], w = img.width / 2 * s, h = img.height / 2 * s, x = T0.x + dx, y = T0.y + dy;
+    place(S, img, x, y, { w, h, solid: [-w * 0.4, -h * 0.42, w * 0.8, h * 0.38], shadow: w * 0.5 });
+    S.lights.push({ x, y: y - h * 0.25, r: 80 }); S.chimneys.push({ x: x + w * 0.23, y: y - h * 0.92 });
+    // se puede entrar: cada casa es como la del mismo color en Albor
+    S.doors.push({ x, y: y - 2, room: { v_house_blue: 'cuartel', v_house_purple: 'portales', v_house_red: 'herreria', v_house_green: 'consulta', v_house_inn: 'posada' }[keys[(i + T0.seed) % keys.length]] });
+  });
+  const P = (key, dx, dy, solid, k = s) => { const img = A[key], w = img.width / 2 * k, h = img.height / 2 * k; place(S, img, T0.x + dx, T0.y + dy, { w, h, solid, shadow: w * 0.45 }); };
+  P('v_stall_red', 170, 10, [-70, -36, 140, 32]); P('v_well', -160, -10, [-40, -28, 80, 26]);
+  P('v_firepit', 0, 150, null); S.lights.push({ x: T0.x, y: T0.y + 130, r: 110, fire: true });
+  for (const [dx, dy] of [[-250, 170], [240, 180]]) P('v_barrel', dx, dy, [-18, -12, 36, 12]);
+  P('v_crate', 250, -40, [-24, -12, 48, 12]);
+  const lamp = lampArt();
+  for (const [dx, dy] of [[-150, -120], [150, -120], [-150, 220], [150, 220]]) { place(S, lamp, T0.x + dx, T0.y + dy, { w: 30, h: 90, solid: [-5, -6, 10, 6], shadow: 12 }); S.lights.push({ x: T0.x + dx, y: T0.y + dy - 76, r: 70 }); }
+  place(S, signArt(T0.name.length > 12 ? T0.name.split(' ').pop() : T0.name), T0.x + 90, T0.y - 150, { w: 90, h: 70, solid: [-6, -8, 12, 8], shadow: 20 });
+}
 
 /* ------------------------------------------------------- colocar el mundo */
 let WORLD;
@@ -310,7 +345,8 @@ function buildWorld() {
     return true;
   };
   const mark = (x, y) => { const k = Math.floor(x / 200) + ',' + Math.floor(y / 200); if (!occ.has(k)) occ.set(k, []); occ.get(k).push([x, y]); };
-  const free = (x, y, m = 40) => !villageZone(x, y, 0.95) && !onPath(x, y, m) && !inLake(x, y, 80) && !PORTALS.some((p) => Math.abs(p.x - x) < 170 && Math.abs(p.y - y) < 150);
+  for (const T0 of TOWNS) if (!T0.main) placeTown(S, T0);
+  const free = (x, y, m = 40) => !safeZone(x, y, 0.95) && !onPath(x, y, m) && !inLake(x, y, 80) && !PORTALS.some((p) => Math.abs(p.x - x) < 170 && Math.abs(p.y - y) < 150);
   for (let tries = 0; tries < 26000; tries++) {
     const x = 60 + r() * (WORLD_W - 120), y = 160 + r() * (WORLD_H - 180);
     const z = zoneAt(x, y), dens = { bosque: 0.95, pradera: 0.18, costa: 0.32, colinas: 0.22, salvaje: 0.2 }[z];

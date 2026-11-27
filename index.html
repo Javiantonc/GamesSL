@@ -1288,7 +1288,20 @@ const inLake = (x, y, m = 0) => { for (const L of LAKES) if (((x - L.x) / (L.rx 
 const inPond = inLake;
 const roadV = (x, y, w = 34) => Math.abs(x - CX - Math.sin(y * 0.004) * 30 - Math.sin(y * 0.0011) * 140 * Math.min(1, Math.abs(y - CY) / 1500)) < w;
 const roadH = (x, y, w = 34) => Math.abs(y - CY - 60 - Math.sin(x * 0.0035) * 26 - Math.sin(x * 0.0009) * 120 * Math.min(1, Math.abs(x - CX) / 1500)) < w;
-const plaza = (x, y, m = 0) => ((x - CX) / (250 + m)) ** 2 + ((y - CY - 40) / (165 + m)) ** 2 < 1;
+// centro de cada carretera (para colocar los pueblos encima)
+const roadX = (y) => CX + Math.sin(y * 0.004) * 30 + Math.sin(y * 0.0011) * 140 * Math.min(1, Math.abs(y - CY) / 1500);
+const roadY = (x) => CY + 60 + Math.sin(x * 0.0035) * 26 + Math.sin(x * 0.0009) * 120 * Math.min(1, Math.abs(x - CX) / 1500);
+/* Pueblos: Albor en el centro y uno más pequeño en cada región, sobre las carreteras. */
+const TOWNS = [
+  { id: 'albor', name: 'Albor', x: CX, y: CY + 40, rx: 820, ry: 600, main: true },
+  { id: 'roble', name: 'Refugio del Roble', y: CY - 2050, zone: 'bosque', seed: 11 },
+  { id: 'pico', name: 'Picoférreo', x: CX + 2650, zone: 'colinas', seed: 22 },
+  { id: 'lirio', name: 'Puerto Lirio', y: CY + 1850, zone: 'costa', seed: 33 },
+  { id: 'viento', name: 'Campamento Viento', x: CX - 2350, zone: 'salvaje', seed: 44 },
+].map((t) => (t.main ? t : { ...t, x: t.x ?? roadX(t.y), y: t.y ?? roadY(t.x) - 60, rx: 560, ry: 420 }));
+const plaza = (x, y, m = 0) => TOWNS.some((t) => ((x - t.x) / ((t.main ? 250 : 190) + m)) ** 2 + ((y - t.y) / ((t.main ? 165 : 125) + m)) ** 2 < 1);
+const townAt = (x, y, k = 1) => TOWNS.find((t) => ((x - t.x) / (t.rx * k)) ** 2 + ((y - t.y - (t.main ? 20 : 0)) / (t.ry * k)) ** 2 < 1);
+const safeZone = (x, y, k = 1) => !!townAt(x, y, k);
 const onPath = (x, y, m = 0) => (plaza(x, y, m) || roadV(x, y, 34 + m) || roadH(x, y, 34 + m)) && !inLake(x, y, 30);
 const villageZone = (x, y, k = 1) => ((x - CX) / (820 * k)) ** 2 + ((y - CY - 60) / (600 * k)) ** 2 < 1;
 
@@ -1367,11 +1380,11 @@ function buildChunk(i, j) {
     if (!onPath(px, py, -6)) continue;
     const s = 2 + r() * 4; x.beginPath(); x.ellipse(px, py, s, s * 0.7, 0, 0, 7); x.fillStyle = r() > 0.5 ? '#b8935a' : '#ddbb82'; x.fill();
   }
-  // losas de la plaza
-  if (Math.abs(x0 + CH / 2 - CX) < CH && Math.abs(y0 + CH / 2 - CY) < CH) {
-    const p = wrng(77);
-    for (let k = 0; k < 160; k++) {
-      const a = p() * Math.PI * 2, d = Math.sqrt(p()), px = CX + Math.cos(a) * 230 * d, py = CY + 40 + Math.sin(a) * 150 * d, w = 26 + p() * 8, h = 16 + p() * 4, cc = p() > 0.5;
+  // losas de las plazas
+  for (const T0 of TOWNS) if (Math.abs(x0 + CH / 2 - T0.x) < CH && Math.abs(y0 + CH / 2 - T0.y) < CH) {
+    const p = wrng(77 + (T0.seed || 0)), big = T0.main ? 1 : 0.76;
+    for (let k = 0; k < (T0.main ? 160 : 100); k++) {
+      const a = p() * Math.PI * 2, d = Math.sqrt(p()), px = T0.x + Math.cos(a) * 230 * big * d, py = T0.y + Math.sin(a) * 150 * big * d, w = 26 + p() * 8, h = 16 + p() * 4, cc = p() > 0.5;
       x.beginPath(); x.roundRect(px - 14, py - 9, w, h, 5); x.fillStyle = cc ? '#b9a98a' : '#a8987a'; x.fill(); x.lineWidth = 2; x.strokeStyle = '#8a7a5e'; x.stroke();
     }
   }
@@ -1498,9 +1511,31 @@ const PORTALS = [
 ].map(([name, col], i) => {
   const a = i * 2.4 + 0.6, d = 1300 + i * 330;
   let x = CX + Math.cos(a) * d, y = CY + Math.sin(a) * d * 0.66;
-  for (let k = 0; k < 30 && (inLake(x, y, 140) || onPath(x, y, 80)); k++) { x += 70; y += 40; }
+  for (let k = 0; k < 60 && (inLake(x, y, 140) || onPath(x, y, 80) || townAt(x, y, 1.35)); k++) { x += 70; y += 40; }
   return { i, name, col, x: clamp(x, 300, WORLD_W - 300), y: clamp(y, 400, WORLD_H - 200), lvl: 2 + i * 2 };
 });
+
+/* ------------------------------------------------------- pueblos pequeños */
+function placeTown(S, T0) {
+  const A = VILLAGE.ART, r = wrng(T0.seed), s = 1.35;
+  const keys = ['v_house_blue', 'v_house_purple', 'v_house_red', 'v_house_green', 'v_house_inn'];
+  const spots = [[-330, -170], [330, -170], [-360, 330], [360, 330]];
+  spots.forEach(([dx, dy], i) => {
+    const img = A[keys[(i + T0.seed) % keys.length]], w = img.width / 2 * s, h = img.height / 2 * s, x = T0.x + dx, y = T0.y + dy;
+    place(S, img, x, y, { w, h, solid: [-w * 0.4, -h * 0.42, w * 0.8, h * 0.38], shadow: w * 0.5 });
+    S.lights.push({ x, y: y - h * 0.25, r: 80 }); S.chimneys.push({ x: x + w * 0.23, y: y - h * 0.92 });
+    // se puede entrar: cada casa es como la del mismo color en Albor
+    S.doors.push({ x, y: y - 2, room: { v_house_blue: 'cuartel', v_house_purple: 'portales', v_house_red: 'herreria', v_house_green: 'consulta', v_house_inn: 'posada' }[keys[(i + T0.seed) % keys.length]] });
+  });
+  const P = (key, dx, dy, solid, k = s) => { const img = A[key], w = img.width / 2 * k, h = img.height / 2 * k; place(S, img, T0.x + dx, T0.y + dy, { w, h, solid, shadow: w * 0.45 }); };
+  P('v_stall_red', 170, 10, [-70, -36, 140, 32]); P('v_well', -160, -10, [-40, -28, 80, 26]);
+  P('v_firepit', 0, 150, null); S.lights.push({ x: T0.x, y: T0.y + 130, r: 110, fire: true });
+  for (const [dx, dy] of [[-250, 170], [240, 180]]) P('v_barrel', dx, dy, [-18, -12, 36, 12]);
+  P('v_crate', 250, -40, [-24, -12, 48, 12]);
+  const lamp = lampArt();
+  for (const [dx, dy] of [[-150, -120], [150, -120], [-150, 220], [150, 220]]) { place(S, lamp, T0.x + dx, T0.y + dy, { w: 30, h: 90, solid: [-5, -6, 10, 6], shadow: 12 }); S.lights.push({ x: T0.x + dx, y: T0.y + dy - 76, r: 70 }); }
+  place(S, signArt(T0.name.length > 12 ? T0.name.split(' ').pop() : T0.name), T0.x + 90, T0.y - 150, { w: 90, h: 70, solid: [-6, -8, 12, 8], shadow: 20 });
+}
 
 /* ------------------------------------------------------- colocar el mundo */
 let WORLD;
@@ -1543,7 +1578,8 @@ function buildWorld() {
     return true;
   };
   const mark = (x, y) => { const k = Math.floor(x / 200) + ',' + Math.floor(y / 200); if (!occ.has(k)) occ.set(k, []); occ.get(k).push([x, y]); };
-  const free = (x, y, m = 40) => !villageZone(x, y, 0.95) && !onPath(x, y, m) && !inLake(x, y, 80) && !PORTALS.some((p) => Math.abs(p.x - x) < 170 && Math.abs(p.y - y) < 150);
+  for (const T0 of TOWNS) if (!T0.main) placeTown(S, T0);
+  const free = (x, y, m = 40) => !safeZone(x, y, 0.95) && !onPath(x, y, m) && !inLake(x, y, 80) && !PORTALS.some((p) => Math.abs(p.x - x) < 170 && Math.abs(p.y - y) < 150);
   for (let tries = 0; tries < 26000; tries++) {
     const x = 60 + r() * (WORLD_W - 120), y = 160 + r() * (WORLD_H - 180);
     const z = zoneAt(x, y), dens = { bosque: 0.95, pradera: 0.18, costa: 0.32, colinas: 0.22, salvaje: 0.2 }[z];
@@ -1822,6 +1858,18 @@ function buildNpcs() {
     WORLD.npcs.push({ id, V, x, y, dir: 0, t: Math.random() * 10 });
     addSolid(WORLD, { x: x - 12, y: y - 10, w: 24, h: 12 });
   }
+  // personajes de los pueblos de cada región (mercader, maestro de grifos y guardia)
+  const add = (id, V, x, y) => { WORLD.npcs.push({ id, V, x, y, dir: 0, t: Math.random() * 10 }); addSolid(WORLD, { x: x - 12, y: y - 10, w: 24, h: 12 }); };
+  const look = (g, skin, hair, outfit, extra) => ({ gender: g, skin, hair, style: g === 'chica' ? 'coleta' : 'corto', eye: '#2a2220', outfit, wear: 'tunic', face: 'alegre', ...extra });
+  const MER = { roble: ['Mercader Hugo', 'chico'], pico: ['Mercader Gunnar', 'chico'], lirio: ['Mercadera Nadia', 'chica'], viento: ['Mercader Saúl', 'chico'] };
+  const GRI = { roble: ['Grifera Ana', 'chica'], pico: ['Grifero Bruk', 'chico'], lirio: ['Grifera Maren', 'chica'], viento: ['Grifero Tano', 'chico'] };
+  for (const T0 of TOWNS) {
+    if (T0.main) { add('grifo_albor', { name: 'Grifera Ilsa', title: 'Rutas de grifo', role: 'flight', look: look('chica', SKINS[1], '#e6c068', '#3d5a8a', { hat: 'cap', hatC: '#c9a24a', weapon: 'map' }) }, CX + 160, CY + 300); continue; }
+    const [mn, mg] = MER[T0.id], [gn, gg] = GRI[T0.id];
+    add('mer_' + T0.id, { name: mn, title: 'Mercader', role: 'shop', look: look(mg, SKINS[(T0.seed / 11) % 4], '#6b4226', '#9a5a2a', { apron: '#efe2c4', hat: 'cap', hatC: '#5f7a3a', weapon: 'map', beard: mg === 'chico' ? '#6b4226' : null }) }, T0.x + 170, T0.y + 60);
+    add('gri_' + T0.id, { name: gn, title: 'Rutas de grifo', role: 'flight', look: look(gg, SKINS[(T0.seed / 11 + 1) % 4], '#3a2a24', '#3d5a8a', { hat: 'cap', hatC: '#c9a24a', weapon: 'map' }) }, T0.x - 170, T0.y + 70);
+    add('gua_' + T0.id, { name: 'Guardia', title: '', greet: `Bienvenido a ${T0.name}. Aquí los monstruos no entran: descansa tranquilo.`, look: look('chico', SKINS[2], '#3a2a24', '#7a8a9a', { wear: 'mail', hat: 'helm', weapon: 'spear', face: 'decidido' }) }, T0.x + 40, T0.y - 200);
+  }
 }
 function ringOf(x, y) { const d = Math.hypot(x - CX, (y - CY) * 1.45); return d < 1150 ? 0 : d < 1550 ? 1 : 2; }
 function spawnMonsters() {
@@ -1829,7 +1877,7 @@ function spawnMonsters() {
   let n = 0, tries = 0;
   while (n < 240 && tries++ < 40000) {
     const x = 80 + r() * (WORLD_W - 160), y = 160 + r() * (WORLD_H - 220);
-    if (villageZone(x, y, 1.15) || inLake(x, y, 40) || onPath(x, y, 10)) continue;
+    if (safeZone(x, y, 1.15) || inLake(x, y, 40) || onPath(x, y, 10)) continue;
     SC = WORLD; if (blocked(x, y)) continue;
     const lvl = clamp(mobLvlAt(x, y) + ((r() * 3) | 0) - 1, 1, 20), types = mobTypesFor(lvl);
     WORLD.mobs.push(makeMob(types[(r() * types.length) | 0], x, y, lvl));
@@ -2331,7 +2379,7 @@ function drawPortrait() {
 const SAVE = 'mini-realms-toon-heroe';
 const opt = { name: '', gender: 'chico', cls: 'mago', skin: SKINS[1], style: 'corto', hair: HAIRS[1], eye: EYES[0], outfit: CLASSES.mago.color, face: 'alegre' };
 try { Object.assign(opt, JSON.parse(localStorage.getItem(SAVE)) || {}); } catch { /* */ }
-const KEEP = ['lvl', 'xp', 'weapon', 'bag', 'gold', 'mats', 'potions', 'res', 'profs', 'tools', 'bombs', 'found', 'done', 'seen', 'gear', 'food', 'abil', 'offhand'];
+const KEEP = ['lvl', 'xp', 'weapon', 'bag', 'gold', 'mats', 'potions', 'res', 'profs', 'tools', 'bombs', 'found', 'done', 'seen', 'gear', 'food', 'abil', 'offhand', 'towns'];
 function save() { if (!hero) return; try { syncSeen(); const o = { ...opt }; for (const k of KEEP) o[k] = hero[k]; localStorage.setItem(SAVE, JSON.stringify(o)); } catch { /* */ } }
 const pv = document.getElementById('preview'), pvx = pv.getContext('2d');
 let pvDir = 0, pvWalk = false;
@@ -2396,7 +2444,7 @@ document.getElementById('start').onclick = () => {
   hero.weapon = keep && saved.weapon ? saved.weapon : starterWeapon(opt.cls);
   hero.bag = keep && saved.bag ? saved.bag : [];
   hero.gold = keep ? saved.gold || 0 : 0; hero.mats = keep ? saved.mats || {} : {}; hero.potions = keep ? saved.potions ?? 2 : 2;
-  const def = { res: {}, profs: {}, tools: {}, bombs: 0, found: [], done: [], skill: { basic: 1, power: 1 }, seen: '', gear: {}, food: {} };
+  const def = { res: {}, profs: {}, tools: {}, bombs: 0, found: [], done: [], skill: { basic: 1, power: 1 }, seen: '', gear: {}, food: {}, towns: ['albor'] };
   for (const k in def) hero[k] = keep && saved[k] != null ? saved[k] : def[k];
   hero.cd.bomb = 0;
   hero.abil = keep ? saved.abil : null; hero.offhand = keep ? saved.offhand || null : null;
@@ -2601,7 +2649,7 @@ function spawnAnimals() {
   const r = wrng(808);
   for (let n = 0, tries = 0; n < 170 && tries < 30000; tries++) {
     const x = 80 + r() * (WORLD_W - 160), y = 160 + r() * (WORLD_H - 220);
-    if (villageZone(x, y, 1.1) || inLake(x, y, 30) || onPath(x, y, 0)) continue;
+    if (safeZone(x, y, 1.1) || inLake(x, y, 30) || onPath(x, y, 0)) continue;
     SC = WORLD; if (blocked(x, y)) continue;
     let z = zoneAt(x, y);
     if (inLake(x, y, 260)) z = 'costa';
@@ -3060,7 +3108,8 @@ const head = (t) => `<header><b>${t}</b><span class="purse2">🪙 ${hero.gold}</
 function bind(sel, fn) { winEl.querySelectorAll(sel).forEach((b) => (b.onclick = () => fn(b.dataset))); }
 function openRole(n) {
   const role = n.V.role;
-  if (role === 'shop') return openShop('buy');
+  if (role === 'shop') { shopWho = n.V.name; return openShop('buy'); }
+  if (role === 'flight') return openFlight(n);
   if (role.startsWith('prof:')) return openTrainer(role.slice(5), n);
   if (role.startsWith('class:')) return openClassTrainer(role.slice(6), n);
   if (role === 'inn') return openInn(n);
@@ -3068,7 +3117,7 @@ function openRole(n) {
 }
 
 /* mercader */
-let stock = null, stockLvl = 0;
+let stock = null, stockLvl = 0, shopWho = 'Tobías';
 function shopStock() {
   if (!stock || stockLvl !== hero.lvl || stock.cls !== hero.cls) {
     stock = [0, 1, 1, 2].map((r, i) => makeWeapon(hero.cls, hero.lvl + (i > 1 ? 1 : 0), r)); stock.cls = hero.cls; stockLvl = hero.lvl;
@@ -3110,7 +3159,7 @@ function openShop(tab) {
     if (hero.potions) body += `<div class="lrow"><span class="li">🧪</span><b>Poción de vida<small>×${hero.potions} · 5 🪙 cada una</small></b><button class="ghost" data-sp>Vender 1</button></div>`;
     if (hero.bag.length) body += '<h4>Armas y armaduras de la bolsa</h4>' + hero.bag.map((w) => `<div class="lrow"><img src="${itemIcon(w).toDataURL()}"><b style="color:${RARITY[w.rarity].color}">${w.name}<small>${w.slot ? gearStats(w) || gearDesc(w) : 'Daño ' + w.dmg}</small></b><button class="ghost" data-sw="${w.id}">${sellItem(w)} 🪙</button></div>`).join('');
   }
-  openWin(`${head('🛒 Tobías · Mercader')}${tabs}<div class="wbody">${body}</div>`);
+  openWin(`${head(`🛒 ${shopWho} · Mercader`)}${tabs}<div class="wbody">${body}</div>`);
   bind('[data-tab]', (d) => openShop(d.tab));
   const pay = (n) => { if (hero.gold < n) { toast('No tienes oro suficiente'); return false; } hero.gold -= n; return true; };
   const done = (t) => { save(); renderBag(); openShop(t); };
@@ -3211,6 +3260,21 @@ function openTravel(n) {
   bind('[data-go]', (d) => { if (hero.gold < 10) { toast('No tienes oro suficiente'); return; } hero.gold -= 10; const p = PORTALS[+d.go]; enterScene(WORLD, p.x, p.y + 90); save(); });
 }
 
+/* rutas de grifo entre pueblos */
+function openFlight(n) {
+  const here = townAt(n.x, n.y, 1.2);
+  const rows = TOWNS.map((t) => {
+    const known = hero.towns.includes(t.id), cost = t.main ? 5 : 10;
+    return `<div class="lrow ${known ? '' : 'locked'}"><span class="li">${t.main ? '🏰' : '🏘️'}</span><b>${known ? t.name : '???'}<small>${t.main ? 'Pueblo principal' : known ? ZONES[t.zone].name : 'Aún no lo has descubierto'}</small></b>${here && here.id === t.id ? '<em>Estás aquí</em>' : known ? `<button class="ghost" data-fly="${t.id}">Volar · ${cost} 🪙</button>` : ''}</div>`;
+  }).join('');
+  openWin(`${head(`🦅 ${n.V.name} · Rutas de grifo`)}<div class="wbody"><p class="sub">Mis grifos te llevan a cualquier pueblo que ya hayas visitado. Explora el mapa para descubrir más.</p>${rows}</div>`);
+  bind('[data-fly]', (d) => {
+    const t = TOWNS.find((q) => q.id === d.fly), cost = t.main ? 5 : 10;
+    if (hero.gold < cost) { toast('No tienes oro suficiente'); return; }
+    hero.gold -= cost; closeWin(); enterScene(WORLD, t.x, t.y + 230); toast(`🦅 Has volado a <b>${t.name}</b>`); save();
+  });
+}
+
 /* ------------------------------------------------------------------ bombas */
 function throwBomb() {
   if (!hero || hero.dead || !playing) return;
@@ -3243,8 +3307,9 @@ function updateWorldStuff(dt) {
   markSeen(hero.x, hero.y);
   if ((zoneT -= dt) < 0) {
     zoneT = 0.5;
-    const z = villageZone(hero.x, hero.y, 1.1) ? 'pueblo' : zoneAt(hero.x, hero.y);
-    if (hero.zone && z !== hero.zone) { const L = mobLvlAt(hero.x, hero.y); toast(z === 'pueblo' ? '🏠 <b>Albor</b> · zona segura' : `🗺️ <b>${ZONES[z].name}</b> · monstruos de nivel ${Math.max(1, L - 1)}-${L + 2}`); }
+    const town = townAt(hero.x, hero.y, 1.05), z = town ? 'town:' + town.id : zoneAt(hero.x, hero.y);
+    if (town && !hero.towns.includes(town.id)) { hero.towns.push(town.id); toast(`🏘️ ¡Has descubierto <b>${town.name}</b>! Ya puedes viajar aquí en grifo desde cualquier pueblo.`); save(); }
+    if (hero.zone && z !== hero.zone) { const L = mobLvlAt(hero.x, hero.y); toast(town ? `🏠 <b>${town.name}</b> · zona segura` : `🗺️ <b>${ZONES[z].name}</b> · monstruos de nivel ${Math.max(1, L - 1)}-${L + 2}`); }
     hero.zone = z;
     for (const p of PORTALS) if (!hero.found.includes(p.i) && Math.hypot(p.x - hero.x, p.y - hero.y) < 900) {
       hero.found.push(p.i);
@@ -3273,7 +3338,7 @@ function buildMapBase() {
   x.fillStyle = '#c9a46a'; for (let y = 0; y < WORLD_H; y += 40) for (let xx = 0; xx < WORLD_W; xx += 40) if (onPath(xx, y)) x.fillRect(xx * k - 1, y * k - 1, 3, 3);
   for (const L of LAKES) { x.beginPath(); x.ellipse(L.x * k, L.y * k, L.rx * k, L.ry * k, 0, 0, 7); x.fillStyle = '#4f8ac0'; x.fill(); x.lineWidth = 1.5; x.strokeStyle = '#2a2220'; x.stroke(); }
   x.fillStyle = '#2f5f3a'; for (const o of WORLD.objects) if (o.tree) x.fillRect(o.x * k - 1, o.y * k - 2, 2.4, 2.4);
-  x.beginPath(); x.ellipse(CX * k, (CY + 60) * k, 40 * 0.8, 30 * 0.8, 0, 0, 7); x.fillStyle = '#e8d8a8'; x.fill(); x.lineWidth = 2; x.strokeStyle = '#6b4a22'; x.stroke();
+  for (const t of TOWNS) { x.beginPath(); x.ellipse(t.x * k, t.y * k, t.main ? 32 : 20, t.main ? 24 : 15, 0, 0, 7); x.fillStyle = '#e8d8a8'; x.fill(); x.lineWidth = 2; x.strokeStyle = '#6b4a22'; x.stroke(); }
   MAPBASE = c;
 }
 function drawMapTo(cn, x0, y0, w, h, big) {
@@ -3294,7 +3359,7 @@ function drawMapTo(cn, x0, y0, w, h, big) {
   if (big) {
     x.font = 'bold 15px Trebuchet MS';
     const lab = (t, wx, wy) => { const [px, py] = P(wx, wy); if (!SEEN[Math.floor(wy / 100) * SEEN_W + Math.floor(wx / 100)]) return; x.lineWidth = 4; x.strokeStyle = '#2a2220'; x.strokeText(t, px, py); x.fillStyle = '#ffd27a'; x.fillText(t, px, py); };
-    lab('Albor', CX, CY + 40); lab(ZONES.bosque.name, CX, CY - 2200); lab(ZONES.colinas.name, CX + 3000, CY); lab(ZONES.costa.name, CX + 400, CY + 2000); lab(ZONES.salvaje.name, CX - 3000, CY - 300);
+    for (const t of TOWNS) if (hero.towns.includes(t.id)) { const [px, py] = P(t.x, t.y); x.font = '18px sans-serif'; x.fillText(t.main ? '🏰' : '🏘️', px, py + 6); x.font = 'bold 15px Trebuchet MS'; x.lineWidth = 4; x.strokeStyle = '#2a2220'; x.strokeText(t.name, px, py - 16); x.fillStyle = '#fff'; x.fillText(t.name, px, py - 16); } lab(ZONES.bosque.name, CX - 1700, CY - 1500); lab(ZONES.colinas.name, CX + 3200, CY - 1000); lab(ZONES.costa.name, CX + 1900, CY + 1700); lab(ZONES.salvaje.name, CX - 3200, CY - 1000);
   }
   const [hx, hy] = P(hero.x, hero.y);
   x.beginPath(); x.arc(hx, hy, big ? 7 : 5, 0, 7); x.fillStyle = '#ffe46a'; x.fill(); x.lineWidth = 2.4; x.strokeStyle = '#2a2220'; x.stroke();

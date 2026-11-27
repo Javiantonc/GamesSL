@@ -25,6 +25,18 @@ function buildNpcs() {
     WORLD.npcs.push({ id, V, x, y, dir: 0, t: Math.random() * 10 });
     addSolid(WORLD, { x: x - 12, y: y - 10, w: 24, h: 12 });
   }
+  // personajes de los pueblos de cada región (mercader, maestro de grifos y guardia)
+  const add = (id, V, x, y) => { WORLD.npcs.push({ id, V, x, y, dir: 0, t: Math.random() * 10 }); addSolid(WORLD, { x: x - 12, y: y - 10, w: 24, h: 12 }); };
+  const look = (g, skin, hair, outfit, extra) => ({ gender: g, skin, hair, style: g === 'chica' ? 'coleta' : 'corto', eye: '#2a2220', outfit, wear: 'tunic', face: 'alegre', ...extra });
+  const MER = { roble: ['Mercader Hugo', 'chico'], pico: ['Mercader Gunnar', 'chico'], lirio: ['Mercadera Nadia', 'chica'], viento: ['Mercader Saúl', 'chico'] };
+  const GRI = { roble: ['Grifera Ana', 'chica'], pico: ['Grifero Bruk', 'chico'], lirio: ['Grifera Maren', 'chica'], viento: ['Grifero Tano', 'chico'] };
+  for (const T0 of TOWNS) {
+    if (T0.main) { add('grifo_albor', { name: 'Grifera Ilsa', title: 'Rutas de grifo', role: 'flight', look: look('chica', SKINS[1], '#e6c068', '#3d5a8a', { hat: 'cap', hatC: '#c9a24a', weapon: 'map' }) }, CX + 160, CY + 300); continue; }
+    const [mn, mg] = MER[T0.id], [gn, gg] = GRI[T0.id];
+    add('mer_' + T0.id, { name: mn, title: 'Mercader', role: 'shop', look: look(mg, SKINS[(T0.seed / 11) % 4], '#6b4226', '#9a5a2a', { apron: '#efe2c4', hat: 'cap', hatC: '#5f7a3a', weapon: 'map', beard: mg === 'chico' ? '#6b4226' : null }) }, T0.x + 170, T0.y + 60);
+    add('gri_' + T0.id, { name: gn, title: 'Rutas de grifo', role: 'flight', look: look(gg, SKINS[(T0.seed / 11 + 1) % 4], '#3a2a24', '#3d5a8a', { hat: 'cap', hatC: '#c9a24a', weapon: 'map' }) }, T0.x - 170, T0.y + 70);
+    add('gua_' + T0.id, { name: 'Guardia', title: '', greet: `Bienvenido a ${T0.name}. Aquí los monstruos no entran: descansa tranquilo.`, look: look('chico', SKINS[2], '#3a2a24', '#7a8a9a', { wear: 'mail', hat: 'helm', weapon: 'spear', face: 'decidido' }) }, T0.x + 40, T0.y - 200);
+  }
 }
 function ringOf(x, y) { const d = Math.hypot(x - CX, (y - CY) * 1.45); return d < 1150 ? 0 : d < 1550 ? 1 : 2; }
 function spawnMonsters() {
@@ -32,7 +44,7 @@ function spawnMonsters() {
   let n = 0, tries = 0;
   while (n < 240 && tries++ < 40000) {
     const x = 80 + r() * (WORLD_W - 160), y = 160 + r() * (WORLD_H - 220);
-    if (villageZone(x, y, 1.15) || inLake(x, y, 40) || onPath(x, y, 10)) continue;
+    if (safeZone(x, y, 1.15) || inLake(x, y, 40) || onPath(x, y, 10)) continue;
     SC = WORLD; if (blocked(x, y)) continue;
     const lvl = clamp(mobLvlAt(x, y) + ((r() * 3) | 0) - 1, 1, 20), types = mobTypesFor(lvl);
     WORLD.mobs.push(makeMob(types[(r() * types.length) | 0], x, y, lvl));
@@ -534,7 +546,7 @@ function drawPortrait() {
 const SAVE = 'mini-realms-toon-heroe';
 const opt = { name: '', gender: 'chico', cls: 'mago', skin: SKINS[1], style: 'corto', hair: HAIRS[1], eye: EYES[0], outfit: CLASSES.mago.color, face: 'alegre' };
 try { Object.assign(opt, JSON.parse(localStorage.getItem(SAVE)) || {}); } catch { /* */ }
-const KEEP = ['lvl', 'xp', 'weapon', 'bag', 'gold', 'mats', 'potions', 'res', 'profs', 'tools', 'bombs', 'found', 'done', 'seen', 'gear', 'food', 'abil', 'offhand'];
+const KEEP = ['lvl', 'xp', 'weapon', 'bag', 'gold', 'mats', 'potions', 'res', 'profs', 'tools', 'bombs', 'found', 'done', 'seen', 'gear', 'food', 'abil', 'offhand', 'towns'];
 function save() { if (!hero) return; try { syncSeen(); const o = { ...opt }; for (const k of KEEP) o[k] = hero[k]; localStorage.setItem(SAVE, JSON.stringify(o)); } catch { /* */ } }
 const pv = document.getElementById('preview'), pvx = pv.getContext('2d');
 let pvDir = 0, pvWalk = false;
@@ -599,7 +611,7 @@ document.getElementById('start').onclick = () => {
   hero.weapon = keep && saved.weapon ? saved.weapon : starterWeapon(opt.cls);
   hero.bag = keep && saved.bag ? saved.bag : [];
   hero.gold = keep ? saved.gold || 0 : 0; hero.mats = keep ? saved.mats || {} : {}; hero.potions = keep ? saved.potions ?? 2 : 2;
-  const def = { res: {}, profs: {}, tools: {}, bombs: 0, found: [], done: [], skill: { basic: 1, power: 1 }, seen: '', gear: {}, food: {} };
+  const def = { res: {}, profs: {}, tools: {}, bombs: 0, found: [], done: [], skill: { basic: 1, power: 1 }, seen: '', gear: {}, food: {}, towns: ['albor'] };
   for (const k in def) hero[k] = keep && saved[k] != null ? saved[k] : def[k];
   hero.cd.bomb = 0;
   hero.abil = keep ? saved.abil : null; hero.offhand = keep ? saved.offhand || null : null;
