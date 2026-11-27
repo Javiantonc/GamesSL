@@ -307,6 +307,38 @@ function helmDeco(L, hy, side) {
     toon(PL([[s, y - 5], [s + 4, y], [s, y + 5], [s - 4, y]]), GEMC[r] || TRIMC[r], { shade: false, lw: 1.8 }); dot(s - 1, y - 1.5, 1.1, '#fff');
   }
 }
+/* ---------------------------------------------------------------- barbas */
+const BEARDS = { ninguna: 'Sin barba', sombra: 'Sombra', perilla: 'Perilla', bigote: 'Bigote', candado: 'Candado', patillas: 'Patillas', completa: 'Completa', larga: 'Larga', vikinga: 'Vikinga' };
+function moustache(c, hy, x0 = 0) {
+  toon((k) => { k.moveTo(x0, hy + 9.5); k.quadraticCurveTo(x0 - 5, hy + 7.5, x0 - 10, hy + 12.5); k.quadraticCurveTo(x0 - 5, hy + 11.5, x0, hy + 11.8); k.quadraticCurveTo(x0 + 5, hy + 11.5, x0 + 10, hy + 12.5); k.quadraticCurveTo(x0 + 5, hy + 7.5, x0, hy + 9.5); k.closePath(); }, c, { shade: false, lw: 1.8 });
+}
+function fullBeard(c, hy, len = 28, point = false) {
+  toon((k) => { k.moveTo(-14, hy + 4); k.quadraticCurveTo(-13, hy + len - 4, 0, hy + len + (point ? 6 : 0)); k.quadraticCurveTo(13, hy + len - 4, 14, hy + 4); k.quadraticCurveTo(8, hy + 10, 4, hy + 9); k.quadraticCurveTo(0, hy + 7, -4, hy + 9); k.quadraticCurveTo(-8, hy + 10, -14, hy + 4); k.closePath(); }, c, { sx: -2, sy: -1.5 });
+  if (len > 30) for (const x of [-6, 0, 6]) stroke([[x, hy + 20], [x * 0.7, hy + len - 4]], dk(c), 1.4);
+}
+function beardFront(L, hy) {
+  const c = L.beard, t = L.beardT || 'completa';
+  if (t === 'sombra') { X.save(); path((k) => { k.moveTo(-17, hy - 2); k.quadraticCurveTo(-18, hy + 16, 0, hy + 18); k.quadraticCurveTo(18, hy + 16, 17, hy - 2); k.closePath(); }); X.clip(); X.globalAlpha = 0.32; X.fillStyle = c; X.fillRect(-18, hy + 6, 36, 14); X.globalAlpha = 1; for (let i = 0; i < 26; i++) dot(-12 + (i * 37) % 24, hy + 8 + ((i * 13) % 9), 0.6, dk(c)); X.restore(); return; }
+  if (t === 'patillas') { for (const s of [-1, 1]) toon(PL([[s * 17, hy - 6], [s * 13, hy - 6], [s * 12, hy + 10], [s * 16.5, hy + 8]]), c, { shade: false, lw: 1.8 }); return; }
+  if (t === 'perilla' || t === 'candado') toon((k) => { k.moveTo(-5.5, hy + 17.5); k.quadraticCurveTo(0, hy + 16, 5.5, hy + 17.5); k.quadraticCurveTo(4, hy + 26, 0, hy + 28); k.quadraticCurveTo(-4, hy + 26, -5.5, hy + 17.5); k.closePath(); }, c, { sx: -1, sy: -1, lw: 1.8 });
+  if (t === 'candado') for (const s of [-1, 1]) stroke([[s * 9.5, hy + 12.5], [s * 6, hy + 18]], c, 2.6);
+  if (t === 'bigote' || t === 'candado') { moustache(c, hy); return; }
+  if (t === 'perilla') return;
+  if (t === 'vikinga') { for (const s of [-1, 1]) { toon(RR(s * 8 - 3, hy + 20, 6, 22, 3), c, { sx: -1, sy: 0, lw: 1.8 }); for (const y of [hy + 26, hy + 34]) stroke([[s * 8 - 3.5, y], [s * 8 + 3.5, y]], '#c9a24a', 2); } }
+  fullBeard(c, hy, t === 'larga' ? 40 : 28, t === 'larga');
+  moustache(c, hy);
+}
+function beardSide(L, hy) {
+  const c = L.beard, t = L.beardT || 'completa';
+  if (t === 'sombra') { X.globalAlpha = 0.32; path((k) => { k.moveTo(-6, hy + 6); k.quadraticCurveTo(-4, hy + 20, 8, hy + 19); k.quadraticCurveTo(16, hy + 16, 16, hy + 8); k.closePath(); }); X.fillStyle = c; X.fill(); X.globalAlpha = 1; return; }
+  if (t === 'patillas') { toon(PL([[-6, hy - 4], [-1, hy - 4], [0, hy + 10], [-5, hy + 8]]), c, { shade: false, lw: 1.8 }); return; }
+  if (t === 'perilla' || t === 'candado') toon((k) => { k.moveTo(9, hy + 15); k.quadraticCurveTo(15, hy + 15, 15, hy + 16); k.quadraticCurveTo(14, hy + 24, 10, hy + 25); k.closePath(); }, c, { shade: false, lw: 1.8 });
+  if (t === 'bigote' || t === 'candado') { toon((k) => { k.moveTo(8, hy + 9.5); k.quadraticCurveTo(14, hy + 8, 18, hy + 11.5); k.quadraticCurveTo(13, hy + 11, 8, hy + 11.5); k.closePath(); }, c, { shade: false, lw: 1.8 }); return; }
+  if (t === 'perilla') return;
+  const len = t === 'larga' ? 40 : 26;
+  toon((k) => { k.moveTo(-6, hy + 6); k.quadraticCurveTo(-4, hy + len, 8, hy + len + (t === 'larga' ? 4 : 0)); k.quadraticCurveTo(18, hy + 18, 17, hy + 8); k.quadraticCurveTo(10, hy + 10, -6, hy + 6); k.closePath(); }, c, { sx: -2, sy: -1 });
+  if (t === 'vikinga') { toon(RR(5, hy + 22, 6, 20, 3), c, { sx: -1, sy: 0, lw: 1.8 }); stroke([[4.5, hy + 30], [11.5, hy + 30]], '#c9a24a', 2); }
+}
 function hidesHair(L) { return L.hat === 'helm' || L.hat === 'coif' || L.hat === 'hood'; }
 function hasHood(L) { return L.hat === 'hood' || L.hat === 'coif'; }
 function hoodColor(L) { return L.hat === 'coif' ? '#8f959e' : (L.hatC || (L.wear === 'darkrobe' ? '#3a3440' : dk(L.outfit))); }
@@ -319,7 +351,7 @@ function headFront(L, hy, girl) {
   toon((k) => { k.moveTo(-17, hy - 2); k.quadraticCurveTo(-18, hy + 16, 0, hy + 18); k.quadraticCurveTo(18, hy + 16, 17, hy - 2); k.quadraticCurveTo(17, hy - 18, 0, hy - 18); k.quadraticCurveTo(-17, hy - 18, -17, hy - 2); k.closePath(); }, skin, { sx: -3, sy: -2 });
   if (L.hat === 'hood') { X.save(); path((k) => k.ellipse(0, hy, 17, 18, 0, 0, Math.PI * 2)); X.clip(); X.fillStyle = 'rgba(30,20,40,0.38)'; X.fillRect(-20, hy - 20, 40, 14); X.restore(); }
   face(L, hy, girl);
-  if (L.beard) toon((k) => { k.moveTo(-14, hy + 4); k.quadraticCurveTo(-12, hy + 26, 0, hy + 28); k.quadraticCurveTo(12, hy + 26, 14, hy + 4); k.quadraticCurveTo(8, hy + 10, 4, hy + 9); k.quadraticCurveTo(0, hy + 7, -4, hy + 9); k.quadraticCurveTo(-8, hy + 10, -14, hy + 4); k.closePath(); }, L.beard, { sx: -2, sy: -1.5 });
+  if (L.beard) beardFront(L, hy);
   if (!hidesHair(L)) hairFront(L, hy);
   headgear(L, hy, 0);
 }
@@ -484,7 +516,7 @@ function drawSide(L, f, pose) {
   path(E(10, ey + 6, 2.6, 1.6)); X.fillStyle = 'rgba(230,110,100,0.35)'; X.fill();
   if (e === 'alegre') { path((k) => { k.moveTo(9, hy + 10.5); k.quadraticCurveTo(16, hy + 10, 16, hy + 11); k.quadraticCurveTo(14, hy + 16, 10, hy + 14); k.closePath(); }); X.fillStyle = '#7a2a26'; X.fill(); X.strokeStyle = OUT; X.lineWidth = 1.6; X.stroke(); }
   else stroke([[11, hy + 12], [15, hy + 11.5]], OUT, 1.6);
-  if (L.beard) toon((k) => { k.moveTo(-6, hy + 6); k.quadraticCurveTo(-4, hy + 26, 8, hy + 26); k.quadraticCurveTo(18, hy + 18, 17, hy + 8); k.quadraticCurveTo(10, hy + 10, -6, hy + 6); k.closePath(); }, L.beard, { sx: -2, sy: -1 });
+  if (L.beard) beardSide(L, hy);
   if (!hidesHair(L)) {
     if (L.style === 'rapado') toon((k) => { k.moveTo(-14, hy); k.quadraticCurveTo(-14, hy - 19, 2, hy - 19); k.quadraticCurveTo(16, hy - 19, 16, hy - 8); k.quadraticCurveTo(4, hy - 12, -6, hy - 8); k.closePath(); }, dk(L.hair), { shade: false });
     else {
@@ -504,5 +536,7 @@ function drawSide(L, f, pose) {
 const wk = (L) => (typeof L.weapon === 'string' ? L.weapon : L.weapon?.kind);
 function heroLook(o, wpn) {
   const K = CLASSES[o.cls];
-  return { gender: o.gender, skin: o.skin, hair: o.hair, style: o.style, eye: o.eye, outfit: o.outfit, wear: K.wear, hat: K.hat, weapon: wpn || K.weapon, face: o.face };
+  // se empieza con ropa sencilla: la armadura y los cascos se consiguen jugando
+  const bd = o.gender === 'chico' && o.beard && o.beard !== 'ninguna';
+  return { gender: o.gender, skin: o.skin, hair: o.hair, style: o.style, eye: o.eye, outfit: o.outfit, wear: 'tunic', hat: null, weapon: wpn || K.weapon, face: o.face, beard: bd ? o.hair : null, beardT: bd ? o.beard : null };
 }

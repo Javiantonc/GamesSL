@@ -57,10 +57,11 @@ function rollLoot(m) {
     return items;
   }
   const items = [{ kind: 'gold', n: Math.max(1, Math.round((2 + m.lvl * 2.2) * (0.6 + Math.random() * 0.9))) }];
-  if (Math.random() < 0.22) items.push({ kind: 'gear', g: makeGear(hero.cls, Math.max(1, m.lvl + ((Math.random() * 3) | 0) - 1), rollRarity(m.lvl * 0.8 + (m.boss ? 40 : 0))) });
+  const dg = SC.kind === 'dungeon';   // en las mazmorras salen cosas mejores
+  if (Math.random() < (dg ? 0.45 : 0.3)) items.push({ kind: 'gear', g: makeGear(hero.cls, Math.max(1, m.lvl + ((Math.random() * 3) | 0) - 1), rollRarity(m.lvl * 0.8 + (dg ? 30 : 0))) });
   if (md && Math.random() < md[2]) items.push({ kind: 'mat', icon: md[0], name: md[1], n: 1 + (Math.random() < 0.3 ? 1 : 0) });
   if (Math.random() < 0.14) items.push({ kind: 'potion', icon: '🧪', name: 'Poción de vida', n: 1 });
-  if (Math.random() < 0.24) items.push({ kind: 'weapon', w: makeWeapon(hero.cls, Math.max(1, m.lvl + ((Math.random() * 3) | 0) - 1), rollRarity(m.lvl * 0.8)) });
+  if (Math.random() < (dg ? 0.3 : 0.2)) items.push({ kind: 'weapon', w: makeWeapon(hero.cls, Math.max(1, m.lvl + ((Math.random() * 3) | 0) - 1), rollRarity(m.lvl * 0.8 + (dg ? 30 : 0))) });
   return items;
 }
 function nearCorpse() {
@@ -551,12 +552,15 @@ function renderCreator() {
   chips('o-gender', [['chico', '👦 Chico'], ['chica', '👧 Chica']], 'gender', (v) => { opt.style = v === 'chica' ? 'largo' : 'corto'; });
   chips('o-cls', Object.entries(CLASSES).map(([k, c]) => [k, `${c.icon} ${c.name}`]), 'cls', (v) => { opt.outfit = CLASSES[v].color; });
   const K = CLASSES[opt.cls];
-  document.getElementById('clsdesc').innerHTML = `${K.desc}<br>Empiezas con <b>${ABIL[START_ABILS[opt.cls][0]].icon} ${ABIL[START_ABILS[opt.cls][0]].name}</b> (ataque básico) y <b>${ABIL[START_ABILS[opt.cls][1]].icon} ${ABIL[START_ABILS[opt.cls][1]].name}</b>. Hay 20 habilidades por clase: lleva 5 a la vez.`;
+  document.getElementById('clsdesc').innerHTML = `${K.desc}<br>Empiezas con <b>${ABIL[START_ABILS[opt.cls][0]].icon} ${ABIL[START_ABILS[opt.cls][0]].name}</b> (ataque básico) y <b>${ABIL[START_ABILS[opt.cls][1]].icon} ${ABIL[START_ABILS[opt.cls][1]].name}</b>. Hay 20 habilidades por clase: lleva 5 a la vez.<br>Empiezas con ropa sencilla: la armadura se consigue matando monstruos, y las mazmorras dan las mejores piezas.`;
   swatches('o-skin', SKINS, 'skin');
   chips('o-style', Object.entries(STYLES), 'style');
   swatches('o-hair', HAIRS, 'hair');
   swatches('o-eye', EYES, 'eye');
   chips('o-face', Object.entries(FACES), 'face');
+  document.getElementById('beardrow').style.display = opt.gender === 'chico' ? '' : 'none';
+  if (!opt.beard) opt.beard = 'ninguna';
+  chips('o-beard', Object.entries(BEARDS), 'beard');
   swatches('o-outfit', OUTFITS, 'outfit');
 }
 function drawPreview() {
@@ -579,7 +583,7 @@ document.getElementById('anim').onclick = (e) => { pvWalk = !pvWalk; e.target.te
 document.getElementById('atkbtn').onclick = () => { pvAtk = 0.4; };
 document.getElementById('rand').onclick = () => {
   const p = (a) => a[(Math.random() * a.length) | 0];
-  Object.assign(opt, { gender: p(['chico', 'chica']), cls: p(Object.keys(CLASSES)), skin: p(SKINS), style: p(Object.keys(STYLES)), hair: p(HAIRS), eye: p(EYES), outfit: p(OUTFITS), face: p(Object.keys(FACES)) });
+  Object.assign(opt, { gender: p(['chico', 'chica']), cls: p(Object.keys(CLASSES)), skin: p(SKINS), style: p(Object.keys(STYLES)), hair: p(HAIRS), eye: p(EYES), outfit: p(OUTFITS), face: p(Object.keys(FACES)), beard: Math.random() < 0.5 ? 'ninguna' : p(Object.keys(BEARDS)) });
   renderCreator();
 };
 const nameEl = document.getElementById('name');
