@@ -244,6 +244,7 @@ function update(dt) {
     if (hero.gather) { hero.gather = null; gbar.style.display = 'none'; }
     if (talkingTo && Math.hypot(talkingTo.x - hero.x, talkingTo.y - hero.y) > 100) { talkingTo = null; talkEl.style.display = 'none'; }
   } else { hero.frame = 0; hero.ft = 0; }
+  weaponTrail(dt, len > 0.1);
   hero.atkT -= dt; hero.hurt -= dt; hero.spin = Math.max(0, (hero.spin || 0) - dt);
   if (hero.regen && T < hero.regen.until && !hero.dead) hero.hp = Math.min(hero.max, hero.hp + hero.regen.per * dt);
   if (hero.buff && T > hero.buff.until) { hero.buff = null; recalc(); toast('Ya no estás bien alimentado'); }
@@ -289,7 +290,8 @@ function update(dt) {
   for (let i = shots.length - 1; i >= 0; i--) {
     const s = shots[i];
     s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt;
-    if (Math.random() < 0.8) fx.push({ k: 'p', x: s.x, y: s.y, vx: 0, vy: -20, t: 0, life: 0.3, c: s.c });
+    if (s.wr >= 3) { for (let q = 0; q < 2; q++) fx.push({ k: 'tr', x: s.x + (Math.random() - 0.5) * 6, y: s.y + (Math.random() - 0.5) * 6, vx: -s.vx * 0.05, vy: -s.vy * 0.05 - 10, t: 0, life: 0.45, c: trailColor(s.wr, T + q * 0.3), r: 3 + (s.wr - 3) * 1.2 }); }
+    else if (Math.random() < 0.8) fx.push({ k: 'p', x: s.x, y: s.y, vx: 0, vy: -20, t: 0, life: 0.3, c: s.c });
     if (s.tg && !s.tg.dead) {   // proyectil teledirigido hacia su objetivo
       const dx = s.tg.x - s.x, dy = s.tg.y - 22 - s.y, d = Math.hypot(dx, dy) || 1, sp = Math.hypot(s.vx, s.vy), k = Math.min(1, dt * 8);
       s.vx += ((dx / d) * sp - s.vx) * k; s.vy += ((dy / d) * sp - s.vy) * k; s.life = Math.max(s.life, 0.1);
@@ -302,7 +304,7 @@ function update(dt) {
     }
     if (hit || s.life <= 0) shots.splice(i, 1);
   }
-  for (let i = fx.length - 1; i >= 0; i--) { const f = fx[i]; f.t += dt; if (f.k === 'p') { f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 300 * dt; } if (f.t > f.life) fx.splice(i, 1); }
+  for (let i = fx.length - 1; i >= 0; i--) { const f = fx[i]; f.t += dt; if (f.k === 'p') { f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 300 * dt; } else if (f.k === 'tr') { f.x += f.vx * dt; f.y += f.vy * dt; } if (f.t > f.life) fx.splice(i, 1); }
   for (let i = nums.length - 1; i >= 0; i--) { nums[i].t += dt; if (nums[i].t > (nums[i].big ? 1.6 : 0.9)) nums.splice(i, 1); }
 }
 function stepMob(m, tx, ty, sp, dt) {
@@ -445,7 +447,8 @@ function draw() {
   for (const s of shots) if (!s.arrow) { const r = s.ab.big ? 9 : 6; ctx.fillStyle = s.c; ctx.beginPath(); ctx.arc(s.x, s.y, r + 4, 0, 7); ctx.globalAlpha = 0.35; ctx.fill(); ctx.globalAlpha = 1; ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, 7); ctx.fill(); ctx.lineWidth = 2.4; ctx.strokeStyle = OUT; ctx.stroke(); dot(s.x - 2, s.y - 2, r * 0.35, '#fff'); }
   for (const f of fx) {
     const k = f.t / f.life;
-    if (f.k === 'p') { ctx.globalAlpha = 1 - k; ctx.fillStyle = f.c; ctx.beginPath(); ctx.arc(f.x, f.y, 4, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
+    if (f.k === 'tr') { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = (1 - k) * 0.9; ctx.fillStyle = f.c; ctx.beginPath(); ctx.arc(f.x, f.y, f.r * (1 - k * 0.6), 0, 7); ctx.fill(); ctx.globalAlpha = (1 - k) * 0.35; ctx.beginPath(); ctx.arc(f.x, f.y, f.r * 2.2 * (1 - k * 0.5), 0, 7); ctx.fill(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
+    else if (f.k === 'p') { ctx.globalAlpha = 1 - k; ctx.fillStyle = f.c; ctx.beginPath(); ctx.arc(f.x, f.y, 4, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
     else if (f.k === 'ring') { const r = 8 + (f.r - 8) * Math.min(1, k * 1.6); ctx.globalAlpha = 1 - k; ctx.strokeStyle = f.c; ctx.lineWidth = 6; ctx.beginPath(); ctx.ellipse(f.x, f.y, r, r * 0.55, 0, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
     else if (f.k === 'mark') { ctx.globalAlpha = 0.5 + Math.sin(T * 20) * 0.2; ctx.strokeStyle = f.c; ctx.lineWidth = 4; ctx.setLineDash([10, 8]); ctx.beginPath(); ctx.ellipse(f.x, f.y, f.r, f.r * 0.55, 0, 0, 7); ctx.stroke(); ctx.setLineDash([]); ctx.beginPath(); ctx.ellipse(f.x, f.y, f.r * k, f.r * k * 0.55, 0, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
     else if (f.k === 'bomb') { const p = Math.min(1, k), x0 = f.x0 + (f.x - f.x0) * p, y0 = f.y0 + (f.y - f.y0) * p - Math.sin(p * Math.PI) * 80; dot(x0, y0, 8, '#3a3440'); dot(x0 - 2, y0 - 3, 2.4, '#fff'); dot(x0 + 4, y0 - 9, 3, Math.sin(T * 40) > 0 ? '#ffd27a' : '#ff6a3a'); }
@@ -453,7 +456,13 @@ function draw() {
       const a0 = Math.atan2(f.dir[1], f.dir[0]);
       ctx.globalAlpha = 1 - k; ctx.lineCap = 'round';
       ctx.strokeStyle = OUT; ctx.lineWidth = 9; ctx.beginPath(); ctx.arc(f.x - f.dir[0] * 14, f.y - f.dir[1] * 14, 28, a0 - 1.2 + k, a0 + 1.0 + k); ctx.stroke();
-      ctx.strokeStyle = f.c; ctx.lineWidth = 5; ctx.stroke(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = f.c; ctx.lineWidth = 5; ctx.stroke();
+      if (f.wr >= 3) {   // estela de color en los golpes con armas épicas o mejores
+        ctx.globalCompositeOperation = 'lighter';
+        for (let q = 0; q < (f.wr - 1); q++) { ctx.strokeStyle = trailColor(f.wr, T + q * 0.4); ctx.globalAlpha = (1 - k) * 0.55; ctx.lineWidth = 12 - q * 2; ctx.beginPath(); ctx.arc(f.x - f.dir[0] * 14, f.y - f.dir[1] * 14, 30 + q * 5, a0 - 1.3 + k - q * 0.08, a0 + 1.1 + k); ctx.stroke(); }
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      ctx.globalAlpha = 1;
     }
   }
   // humo y fuego

@@ -243,7 +243,9 @@ function use(i) {
   switch (ab.kind) {
     case 'melee': {
       const cx0 = hero.x + vx * 30, cy0 = hero.y - 20 + vy * 26;
-      fx.push({ k: 'slash', x: cx0, y: cy0, dir: [vx, vy], t: 0, life: 0.2, c: col });
+      const wr = (ab.sec && hero.second ? hero.second : hero.weapon).rarity;
+      fx.push({ k: 'slash', x: cx0, y: cy0, dir: [vx, vy], t: 0, life: wr >= 3 ? 0.32 : 0.2, c: wr >= 3 && !ab.color ? trailColor(wr, T) : col, wr });
+      if (wr >= 3) for (let q = 0; q < 8 + wr * 2; q++) { const a = Math.atan2(vy, vx) - 1.2 + q * 0.22; fx.push({ k: 'tr', x: cx0 - vx * 14 + Math.cos(a) * 30, y: cy0 - vy * 14 + Math.sin(a) * 30, vx: Math.cos(a) * 30, vy: Math.sin(a) * 30 - 20, t: 0, life: 0.4 + Math.random() * 0.2, c: trailColor(wr, T + q * 0.15), r: 2.6 + (wr - 3) }); }
       for (const m of mobs) if (!m.dead && Math.hypot(m.x - cx0, m.y - 18 - cy0) < ab.range) hitMob(m, ab, dmg);
       break;
     }
@@ -253,7 +255,7 @@ function use(i) {
       ts.forEach((t, k) => {
         const tx = t ? t.x : hero.x + vx * rng, ty = t ? t.y - 22 : hero.y - 40 + vy * rng;
         const sx = hero.x + vx * 20, sy = hero.y - 46 - k * 6, d = Math.hypot(tx - sx, ty - sy) || 1, sp = ab.speed || 420;
-        shots.push({ dmg, x: sx, y: sy, vx: ((tx - sx) / d) * sp, vy: ((ty - sy) / d) * sp, life: rng / sp + 0.4, ab, c: col, tg: t, arrow: ab.cls === 'cazador' && !ab.big ? (hero.weapon.kind === 'rifle' ? 'bala' : 'flecha') : null });
+        shots.push({ dmg, x: sx, y: sy, vx: ((tx - sx) / d) * sp, vy: ((ty - sy) / d) * sp, life: rng / sp + 0.4, ab, c: col, tg: t, wr: hero.weapon.rarity, arrow: ab.cls === 'cazador' && !ab.big ? (hero.weapon.kind === 'rifle' ? 'bala' : 'flecha') : null });
       });
       break;
     }
@@ -379,4 +381,17 @@ function openClassTrainer(cls, n) {
     hero.gold -= rankPrice(ab); hero.abil.known[ab.id]++;
     toast(`⭐ <b>${ab.name}</b> sube a rango ${hero.abil.known[ab.id]}`); save(); openClassTrainer(cls, n);
   });
+}
+
+/* --------------------------------------------- estela de las armas épicas o mejores */
+function weaponTrail(dt, moving) {
+  if (!hero || hero.dead) return;
+  const wr = Math.max(hero.weapon.rarity || 0, hero.offhand && hasDual() ? hero.offhand.rarity : 0);
+  if (wr < 3) return;
+  if ((hero.trT = (hero.trT || 0) - dt) > 0) return;
+  hero.trT = moving || hero.atkT > 0 ? 0.025 : 0.09;
+  const up = hero.mounted ? 42 : 0;
+  const pts = hero.dir === 2 ? [[(hero.flip ? -1 : 1) * 24, -78]] : hero.dir === 1 ? [[-17, -70]] : [[22, -76]];
+  if (hero.offhand && hasDual() && hero.dir !== 2) pts.push(hero.dir === 1 ? [17, -64] : [-22, -66]);
+  for (const [ox, oy] of pts) fx.push({ k: 'tr', x: hero.x + ox + (Math.random() - 0.5) * 8, y: hero.y + oy - up + (Math.random() - 0.5) * 14, vx: (Math.random() - 0.5) * 16 + (moving ? -Math.sign(hero.vx || 0) * 30 : 0), vy: -14 - Math.random() * 18, t: 0, life: 0.5 + (wr - 3) * 0.15, c: trailColor(wr, T + Math.random()), r: 2.4 + (wr - 3) * 0.9 });
 }

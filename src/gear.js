@@ -66,7 +66,7 @@ function makeGear(cls, lvl, r = rollRarity(), slot = pick(SLOT_ORDER), type) {
   const pts = r === 0 ? (S.jewel ? budget * 0.5 : 0) : budget;
   const poder = Math.round(pts * k * (S.jewel ? 1.2 : 1)), vida = Math.round(pts * (1 - k) * 1.5);
   const arm = Math.round(S.arm * (ARMOR_MULT[type] || 1) * (lvl + 3) * (1 + r * 0.15));
-  const name = r === 4 ? `${base} ${pick(LEGEND_SUFFIX)}` : `${base} ${mat}${r > 0 ? ' ' + suf : ''}`;
+  const name = r >= 5 ? `${base} ${pick(ULTRA_TITLES)}` : r === 4 ? `${base} ${pick(LEGEND_SUFFIX)}` : `${base} ${mat}${r > 0 ? ' ' + suf : ''}`;
   const color = type ? pick(PALETTE[type]) : pick(['#c9a24a', '#d8e0ea', '#e0605a', '#5aa0ff', '#7ad85a']);
   return { id: wid++, slot, type, tier: t, rarity: r, lvl, name, arm: S.arm ? arm : 0, poder, vida, color };
 }
@@ -140,7 +140,7 @@ function refreshLook() {
   if (G.pecho) L.chestR = G.pecho.rarity; if (G.cabeza) L.helmR = G.cabeza.rarity; if (G.hombros) L.shR = G.hombros.rarity;
   if (G.manos) L.handR = G.manos.rarity; if (G.pies) L.feetR = G.pies.rarity;
   const best = Math.max(0, ...Object.values(G).filter(Boolean).map((g) => g.rarity)), nEpic = Object.values(G).filter((g) => g && g.rarity >= 3).length;
-  if (best >= 4 || nEpic >= 4) L.aura = best >= 4 ? '#ffa53a' : '#c070ff';
+  if (best >= 4 || nEpic >= 4) L.aura = best >= 5 ? '#ff3d6e' : best >= 4 ? '#ff9a1f' : '#b45cff';
   if (hero.offhand && hasDual()) L.offhand = hero.offhand;
   if (hero.mounted) L.mounted = true;
   if (G.hombros) L.shoulderC = G.hombros.color;

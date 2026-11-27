@@ -114,7 +114,7 @@
   .gslot { position: relative; width: 54px; height: 54px; padding: 0; background: #1a120c; border: 2px solid #4a3424; border-radius: 6px; color: #fff; display: flex; align-items: center; justify-content: center; }
   .gslot img { width: 46px; height: 46px; } .gslot span { font-size: 22px; opacity: .35; }
   .gslot small { position: absolute; bottom: -1px; left: 0; right: 0; font-size: 8px; color: #c8b898; text-shadow: 0 1px 0 #000; }
-  .gslot.r1 { border-color: #7ad85a; } .gslot.r2 { border-color: #5aa0ff; } .gslot.r3 { border-color: #c070ff; } .gslot.r4 { border-color: #ffa53a; } .gslot.r0 { border-color: #a8a290; }
+  .gslot.r0 { border-color: #a8a8a8; } .gslot.r1 { border-color: #4ee44e; } .gslot.r2 { border-color: #3d9bff; } .gslot.r3 { border-color: #b45cff; box-shadow: 0 0 8px #b45cff; } .gslot.r4 { border-color: #ff9a1f; box-shadow: 0 0 10px #ff9a1f; } .gslot.r5 { border-color: #ff3d6e; animation: ultra 2s linear infinite; }
   .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 13px; margin-top: 8px; } .stats b { color: #ffd27a; }
   .wrow .ghost + .ghost { margin-left: 2px; }
   .slot .empty { opacity: .35; }
@@ -131,7 +131,8 @@
   .bnote { grid-column: span 3; font-size: 11px; color: #c8b898; }
   .bcell { position: relative; aspect-ratio: 1; min-width: 0; padding: 0; background: radial-gradient(#3a2818, #1a120c); border: 2px solid #4a3424; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; }
   .bcell img { width: 88%; height: 88%; } .bcell.vacio { background: #120c08; border-style: dashed; border-color: #3a2a1c; }
-  .bcell.r0 { border-color: #a8a290; } .bcell.r1 { border-color: #7ad85a; } .bcell.r2 { border-color: #5aa0ff; } .bcell.r3 { border-color: #c070ff; box-shadow: inset 0 0 8px #c070ff88; } .bcell.r4 { border-color: #ffa53a; box-shadow: inset 0 0 10px #ffa53a99; }
+  .bcell.r0 { border-color: #a8a8a8; } .bcell.r1 { border-color: #4ee44e; } .bcell.r2 { border-color: #3d9bff; } .bcell.r3 { border-color: #b45cff; box-shadow: inset 0 0 8px #b45cff88, 0 0 6px #b45cff; } .bcell.r4 { border-color: #ff9a1f; box-shadow: inset 0 0 10px #ff9a1f99, 0 0 8px #ff9a1f; } .bcell.r5 { border-color: #ff3d6e; animation: ultra 2s linear infinite; }
+  @keyframes ultra { 0% { border-color: #ff3d6e; box-shadow: 0 0 10px #ff3d6e, inset 0 0 10px #ff3d6e88; } 33% { border-color: #ffd23d; box-shadow: 0 0 10px #ffd23d, inset 0 0 10px #ffd23d88; } 66% { border-color: #3dd8ff; box-shadow: 0 0 10px #3dd8ff, inset 0 0 10px #3dd8ff88; } 100% { border-color: #ff3d6e; box-shadow: 0 0 10px #ff3d6e, inset 0 0 10px #ff3d6e88; } }
   .bcell.st { border-color: var(--c); } .bcell.st span { font-size: 24px; }
   .bcell b { position: absolute; right: 3px; bottom: 0; font-size: 12px; text-shadow: 0 1px 0 #000, 0 0 3px #000; }
   .bcell small { position: absolute; bottom: -1px; left: 0; right: 0; font-size: 8px; color: #ffd27a; text-shadow: 0 1px 0 #000; }
@@ -139,7 +140,7 @@
   .bcell.on { outline: 3px solid #fff; outline-offset: 1px; }
   .binfo { margin-top: 10px; background: #1a120c; border: 2px solid #6b4a22; border-radius: 8px; padding: 8px 10px; font-size: 13px; }
   .binfo.empty { color: #c8b898; text-align: center; font-size: 12px; }
-  .binfo.r1 { border-color: #7ad85a; } .binfo.r2 { border-color: #5aa0ff; } .binfo.r3 { border-color: #c070ff; } .binfo.r4 { border-color: #ffa53a; }
+  .binfo.r1 { border-color: #4ee44e; } .binfo.r2 { border-color: #3d9bff; } .binfo.r3 { border-color: #b45cff; } .binfo.r4 { border-color: #ff9a1f; } .binfo.r5 { border-color: #ff3d6e; animation: ultra 2s linear infinite; }
   .binfo .bh { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; } .binfo .bh img { width: 48px; height: 48px; } .binfo .bh .bi { font-size: 34px; width: 48px; text-align: center; }
   .binfo .bh b { display: block; font-size: 15px; } .binfo small { display: block; color: #c8b898; font-size: 12px; }
   .binfo p { margin: 6px 0; line-height: 1.35; } .binfo .sub { font-size: 12px; color: #c8b898; }
@@ -585,8 +586,8 @@ function armFront(s, W, bob, sw, atk, noGlove) {
   toon((k) => { k.moveTo(sx - 4.5 * s, sy - 1); k.quadraticCurveTo(ex + 4 * s, ey - 4, hx + 4 * s, hy); k.lineTo(hx - 4 * s, hy + 1); k.quadraticCurveTo(ex - 3 * s, ey + 2, sx - 3 * s, sy + 6); k.closePath(); }, W.sleeve, { sx: -1.5, sy: 0 });
   if (!noGlove) toon(E(hx, hy + 1, 5, 4.8), W.glove);
 }
-const TRIMC = [null, '#d8dce4', '#e8c060', '#e8c060', '#ffc040'];
-const GEMC = [null, null, '#5aa0ff', '#c070ff', '#ffa53a'];
+const TRIMC = [null, '#d8dce4', '#e8c060', '#e8c060', '#ffc040', '#ffd060'];
+const GEMC = [null, null, '#3d9bff', '#b45cff', '#ff9a1f', '#ff3d6e'];
 /** Adornos que dependen de la calidad de cada pieza (rareza 0-4). */
 function chestDeco(L, W, t, b) {
   const r = L.chestR || 0; if (!r) return;
@@ -605,7 +606,7 @@ function helmDeco(L, hy, side) {
   const r = L.helmR || 0; if (r < 2) return;
   const s = side ? 3 : 0;
   if (L.hat === 'helm' || L.hat === 'coif') {
-    const pc = r >= 4 ? '#ffb040' : r >= 3 ? '#c070ff' : '#d9402e';
+    const pc = r >= 5 ? '#ff3d6e' : r >= 4 ? '#ffb040' : r >= 3 ? '#b45cff' : '#d9402e';
     toon((k) => { k.moveTo(-3 + s, hy - 22); k.quadraticCurveTo(side ? -14 : 2, hy - 44, side ? -16 : 14, hy - 40); k.quadraticCurveTo(side ? -6 : 8, hy - 32, 3 + s, hy - 22); k.closePath(); }, pc, { sx: -1.5, sy: 0, lw: 2 });
     if (r >= 3 && !side) for (const q of [-1, 1]) toon((k) => { k.moveTo(q * 15, hy - 14); k.quadraticCurveTo(q * 28, hy - 22, q * 26, hy - 36); k.quadraticCurveTo(q * 22, hy - 24, q * 12, hy - 20); k.closePath(); }, '#efe8d8', { sx: -1, sy: 0, lw: 2 });
   } else if (L.hat === 'hood' || L.hat === 'wizard') {
@@ -853,12 +854,16 @@ function heroLook(o, wpn) {
    tienen materiales mágicos y brillan. Cada clase solo usa su tipo de arma.
    ========================================================================= */
 const RARITY = [
-  { id: 'comun', name: 'Común', color: '#e8e2d0', mult: 1, w: 58 },
-  { id: 'poco', name: 'Poco común', color: '#7ad85a', mult: 1.3, w: 26 },
-  { id: 'raro', name: 'Rara', color: '#5aa0ff', mult: 1.7, w: 11 },
-  { id: 'epico', name: 'Épica', color: '#c070ff', mult: 2.2, w: 4 },
-  { id: 'legend', name: 'Legendaria', color: '#ffa53a', mult: 3, w: 1 },
+  { id: 'comun', name: 'Común', color: '#a8a8a8', mult: 1, w: 58 },
+  { id: 'poco', name: 'Poco común', color: '#4ee44e', mult: 1.3, w: 26 },
+  { id: 'raro', name: 'Rara', color: '#3d9bff', mult: 1.7, w: 11 },
+  { id: 'epico', name: 'Épica', color: '#b45cff', mult: 2.2, w: 4 },
+  { id: 'legend', name: 'Legendaria', color: '#ff9a1f', mult: 3, w: 0.85 },
+  { id: 'ultra', name: 'Ultralegendaria', color: '#ff3d6e', mult: 4, w: 0.15 },
 ];
+/** Color de la estela según la rareza (la ultralegendaria cambia de color sin parar). */
+const trailColor = (r, t = 0) => (r >= 5 ? `hsl(${(t * 140) % 360}, 100%, 62%)` : RARITY[r].color);
+const ULTRA_TITLES = ['del Fin de los Tiempos', 'de la Estrella Caída', 'del Dios Dormido', 'del Primer Amanecer', 'del Vacío Eterno'];
 const WEAPON_OF = { picaro: 'dagger', brujo: 'dagger', mago: 'staff', paladin: 'mace', guerrero: 'axe', cazador: 'bow' };
 const MAIN_KINDS = { cazador: ['bow', 'rifle', 'crossbow'] };
 const mainKinds = (cls) => MAIN_KINDS[cls] || [WEAPON_OF[cls]];
@@ -874,7 +879,7 @@ const SHAPES = {
   crossbow: { ligera: 'Ballesta ligera', pesada: 'Ballesta pesada' },
   sword: { recta: 'Espada', ancha: 'Espada ancha', curva: 'Cimitarra' },
 };
-const MAT_BY_RARITY = [['acero', 'bronce'], ['acero', 'bronce', 'oro'], ['oro', 'cristal', 'veneno'], ['cristal', 'fuego', 'sombra', 'veneno'], ['fuego', 'sombra', 'cristal']];
+const MAT_BY_RARITY = [['acero', 'bronce'], ['acero', 'bronce', 'oro'], ['oro', 'cristal', 'veneno'], ['cristal', 'fuego', 'sombra', 'veneno'], ['fuego', 'sombra', 'cristal'], ['fuego', 'sombra', 'cristal']];
 const LEGEND_NAMES = { dagger: ['Colmillo del Alba', 'Susurro Eterno'], staff: ['Vara de los Mil Soles', 'Báculo del Eclipse'], mace: ['Juicio Radiante', 'Martillo del Amanecer'], axe: ['Devoradora de Montañas', 'Furia del Norte'], bow: ['Susurro del Viento', 'Arco del Ocaso'], rifle: ['Trueno de Picoférreo', 'Rugido del Dragón'], crossbow: ['Aguijón Celeste', 'Ballesta del Juicio'], sword: ['Hoja del Amanecer', 'Filo de las Estrellas'] };
 let wid = 1;
 function rollRarity(bonus = 0) {
@@ -889,7 +894,7 @@ function makeWeapon(cls, lvl, r = rollRarity(), kindOverride) {
   const shape = r === 0 ? shapes[0] : shapes[(Math.random() * shapes.length) | 0];
   const mats = MAT_BY_RARITY[r], mat = mats[(Math.random() * mats.length) | 0];
   const R = RARITY[r];
-  const name = r === 4 ? LEGEND_NAMES[kind][(Math.random() * 2) | 0] : `${SHAPES[kind][shape]} ${MATS[mat].name}`;
+  const name = r >= 5 ? `${SHAPES[kind][shape]} ${ULTRA_TITLES[(Math.random() * ULTRA_TITLES.length) | 0]}` : r === 4 ? LEGEND_NAMES[kind][(Math.random() * 2) | 0] : `${SHAPES[kind][shape]} ${MATS[mat].name}`;
   return { id: wid++, kind, shape, mat, glow: r >= 3, rarity: r, lvl, name, dmg: Math.round((3 + lvl * 1.6) * R.mult) };
 }
 function starterWeapon(cls) {
@@ -2128,6 +2133,7 @@ function update(dt) {
     if (hero.gather) { hero.gather = null; gbar.style.display = 'none'; }
     if (talkingTo && Math.hypot(talkingTo.x - hero.x, talkingTo.y - hero.y) > 100) { talkingTo = null; talkEl.style.display = 'none'; }
   } else { hero.frame = 0; hero.ft = 0; }
+  weaponTrail(dt, len > 0.1);
   hero.atkT -= dt; hero.hurt -= dt; hero.spin = Math.max(0, (hero.spin || 0) - dt);
   if (hero.regen && T < hero.regen.until && !hero.dead) hero.hp = Math.min(hero.max, hero.hp + hero.regen.per * dt);
   if (hero.buff && T > hero.buff.until) { hero.buff = null; recalc(); toast('Ya no estás bien alimentado'); }
@@ -2173,7 +2179,8 @@ function update(dt) {
   for (let i = shots.length - 1; i >= 0; i--) {
     const s = shots[i];
     s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt;
-    if (Math.random() < 0.8) fx.push({ k: 'p', x: s.x, y: s.y, vx: 0, vy: -20, t: 0, life: 0.3, c: s.c });
+    if (s.wr >= 3) { for (let q = 0; q < 2; q++) fx.push({ k: 'tr', x: s.x + (Math.random() - 0.5) * 6, y: s.y + (Math.random() - 0.5) * 6, vx: -s.vx * 0.05, vy: -s.vy * 0.05 - 10, t: 0, life: 0.45, c: trailColor(s.wr, T + q * 0.3), r: 3 + (s.wr - 3) * 1.2 }); }
+    else if (Math.random() < 0.8) fx.push({ k: 'p', x: s.x, y: s.y, vx: 0, vy: -20, t: 0, life: 0.3, c: s.c });
     if (s.tg && !s.tg.dead) {   // proyectil teledirigido hacia su objetivo
       const dx = s.tg.x - s.x, dy = s.tg.y - 22 - s.y, d = Math.hypot(dx, dy) || 1, sp = Math.hypot(s.vx, s.vy), k = Math.min(1, dt * 8);
       s.vx += ((dx / d) * sp - s.vx) * k; s.vy += ((dy / d) * sp - s.vy) * k; s.life = Math.max(s.life, 0.1);
@@ -2186,7 +2193,7 @@ function update(dt) {
     }
     if (hit || s.life <= 0) shots.splice(i, 1);
   }
-  for (let i = fx.length - 1; i >= 0; i--) { const f = fx[i]; f.t += dt; if (f.k === 'p') { f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 300 * dt; } if (f.t > f.life) fx.splice(i, 1); }
+  for (let i = fx.length - 1; i >= 0; i--) { const f = fx[i]; f.t += dt; if (f.k === 'p') { f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 300 * dt; } else if (f.k === 'tr') { f.x += f.vx * dt; f.y += f.vy * dt; } if (f.t > f.life) fx.splice(i, 1); }
   for (let i = nums.length - 1; i >= 0; i--) { nums[i].t += dt; if (nums[i].t > (nums[i].big ? 1.6 : 0.9)) nums.splice(i, 1); }
 }
 function stepMob(m, tx, ty, sp, dt) {
@@ -2329,7 +2336,8 @@ function draw() {
   for (const s of shots) if (!s.arrow) { const r = s.ab.big ? 9 : 6; ctx.fillStyle = s.c; ctx.beginPath(); ctx.arc(s.x, s.y, r + 4, 0, 7); ctx.globalAlpha = 0.35; ctx.fill(); ctx.globalAlpha = 1; ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, 7); ctx.fill(); ctx.lineWidth = 2.4; ctx.strokeStyle = OUT; ctx.stroke(); dot(s.x - 2, s.y - 2, r * 0.35, '#fff'); }
   for (const f of fx) {
     const k = f.t / f.life;
-    if (f.k === 'p') { ctx.globalAlpha = 1 - k; ctx.fillStyle = f.c; ctx.beginPath(); ctx.arc(f.x, f.y, 4, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
+    if (f.k === 'tr') { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = (1 - k) * 0.9; ctx.fillStyle = f.c; ctx.beginPath(); ctx.arc(f.x, f.y, f.r * (1 - k * 0.6), 0, 7); ctx.fill(); ctx.globalAlpha = (1 - k) * 0.35; ctx.beginPath(); ctx.arc(f.x, f.y, f.r * 2.2 * (1 - k * 0.5), 0, 7); ctx.fill(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
+    else if (f.k === 'p') { ctx.globalAlpha = 1 - k; ctx.fillStyle = f.c; ctx.beginPath(); ctx.arc(f.x, f.y, 4, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
     else if (f.k === 'ring') { const r = 8 + (f.r - 8) * Math.min(1, k * 1.6); ctx.globalAlpha = 1 - k; ctx.strokeStyle = f.c; ctx.lineWidth = 6; ctx.beginPath(); ctx.ellipse(f.x, f.y, r, r * 0.55, 0, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
     else if (f.k === 'mark') { ctx.globalAlpha = 0.5 + Math.sin(T * 20) * 0.2; ctx.strokeStyle = f.c; ctx.lineWidth = 4; ctx.setLineDash([10, 8]); ctx.beginPath(); ctx.ellipse(f.x, f.y, f.r, f.r * 0.55, 0, 0, 7); ctx.stroke(); ctx.setLineDash([]); ctx.beginPath(); ctx.ellipse(f.x, f.y, f.r * k, f.r * k * 0.55, 0, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
     else if (f.k === 'bomb') { const p = Math.min(1, k), x0 = f.x0 + (f.x - f.x0) * p, y0 = f.y0 + (f.y - f.y0) * p - Math.sin(p * Math.PI) * 80; dot(x0, y0, 8, '#3a3440'); dot(x0 - 2, y0 - 3, 2.4, '#fff'); dot(x0 + 4, y0 - 9, 3, Math.sin(T * 40) > 0 ? '#ffd27a' : '#ff6a3a'); }
@@ -2337,7 +2345,13 @@ function draw() {
       const a0 = Math.atan2(f.dir[1], f.dir[0]);
       ctx.globalAlpha = 1 - k; ctx.lineCap = 'round';
       ctx.strokeStyle = OUT; ctx.lineWidth = 9; ctx.beginPath(); ctx.arc(f.x - f.dir[0] * 14, f.y - f.dir[1] * 14, 28, a0 - 1.2 + k, a0 + 1.0 + k); ctx.stroke();
-      ctx.strokeStyle = f.c; ctx.lineWidth = 5; ctx.stroke(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = f.c; ctx.lineWidth = 5; ctx.stroke();
+      if (f.wr >= 3) {   // estela de color en los golpes con armas épicas o mejores
+        ctx.globalCompositeOperation = 'lighter';
+        for (let q = 0; q < (f.wr - 1); q++) { ctx.strokeStyle = trailColor(f.wr, T + q * 0.4); ctx.globalAlpha = (1 - k) * 0.55; ctx.lineWidth = 12 - q * 2; ctx.beginPath(); ctx.arc(f.x - f.dir[0] * 14, f.y - f.dir[1] * 14, 30 + q * 5, a0 - 1.3 + k - q * 0.08, a0 + 1.1 + k); ctx.stroke(); }
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      ctx.globalAlpha = 1;
     }
   }
   // humo y fuego
@@ -2880,7 +2894,7 @@ function makeGear(cls, lvl, r = rollRarity(), slot = pick(SLOT_ORDER), type) {
   const pts = r === 0 ? (S.jewel ? budget * 0.5 : 0) : budget;
   const poder = Math.round(pts * k * (S.jewel ? 1.2 : 1)), vida = Math.round(pts * (1 - k) * 1.5);
   const arm = Math.round(S.arm * (ARMOR_MULT[type] || 1) * (lvl + 3) * (1 + r * 0.15));
-  const name = r === 4 ? `${base} ${pick(LEGEND_SUFFIX)}` : `${base} ${mat}${r > 0 ? ' ' + suf : ''}`;
+  const name = r >= 5 ? `${base} ${pick(ULTRA_TITLES)}` : r === 4 ? `${base} ${pick(LEGEND_SUFFIX)}` : `${base} ${mat}${r > 0 ? ' ' + suf : ''}`;
   const color = type ? pick(PALETTE[type]) : pick(['#c9a24a', '#d8e0ea', '#e0605a', '#5aa0ff', '#7ad85a']);
   return { id: wid++, slot, type, tier: t, rarity: r, lvl, name, arm: S.arm ? arm : 0, poder, vida, color };
 }
@@ -2954,7 +2968,7 @@ function refreshLook() {
   if (G.pecho) L.chestR = G.pecho.rarity; if (G.cabeza) L.helmR = G.cabeza.rarity; if (G.hombros) L.shR = G.hombros.rarity;
   if (G.manos) L.handR = G.manos.rarity; if (G.pies) L.feetR = G.pies.rarity;
   const best = Math.max(0, ...Object.values(G).filter(Boolean).map((g) => g.rarity)), nEpic = Object.values(G).filter((g) => g && g.rarity >= 3).length;
-  if (best >= 4 || nEpic >= 4) L.aura = best >= 4 ? '#ffa53a' : '#c070ff';
+  if (best >= 4 || nEpic >= 4) L.aura = best >= 5 ? '#ff3d6e' : best >= 4 ? '#ff9a1f' : '#b45cff';
   if (hero.offhand && hasDual()) L.offhand = hero.offhand;
   if (hero.mounted) L.mounted = true;
   if (G.hombros) L.shoulderC = G.hombros.color;
@@ -3058,7 +3072,8 @@ function onBossKilled(m) {
     m.loot.push({ kind: 'gold', n: (first ? 40 : 15) + P.lvl * (first ? 12 : 5) });
     // el jefe siempre suelta un arma épica (o legendaria) y dos piezas de armadura muy buenas
     const legend = Math.random() < (first ? 0.35 : 0.12);
-    m.loot.push({ kind: 'weapon', w: makeWeapon(hero.cls, P.lvl + 2, legend ? 4 : 3) });
+    const ultra = Math.random() < (first ? 0.04 + P.i * 0.012 : 0.02);   // las mazmorras más difíciles pueden dar ultralegendarias
+    m.loot.push({ kind: 'weapon', w: makeWeapon(hero.cls, P.lvl + 2, ultra ? 5 : legend ? 4 : 3) });
     m.loot.push({ kind: 'gear', g: makeGear(hero.cls, P.lvl + 2, 3) });
     m.loot.push({ kind: 'gear', g: makeGear(hero.cls, P.lvl + 2, first && Math.random() < 0.3 ? 4 : Math.random() < 0.5 ? 3 : 2) });
     m.loot.push({ kind: 'potion', icon: '🧪', name: 'Poción de vida', n: 2 });
@@ -3710,7 +3725,9 @@ function use(i) {
   switch (ab.kind) {
     case 'melee': {
       const cx0 = hero.x + vx * 30, cy0 = hero.y - 20 + vy * 26;
-      fx.push({ k: 'slash', x: cx0, y: cy0, dir: [vx, vy], t: 0, life: 0.2, c: col });
+      const wr = (ab.sec && hero.second ? hero.second : hero.weapon).rarity;
+      fx.push({ k: 'slash', x: cx0, y: cy0, dir: [vx, vy], t: 0, life: wr >= 3 ? 0.32 : 0.2, c: wr >= 3 && !ab.color ? trailColor(wr, T) : col, wr });
+      if (wr >= 3) for (let q = 0; q < 8 + wr * 2; q++) { const a = Math.atan2(vy, vx) - 1.2 + q * 0.22; fx.push({ k: 'tr', x: cx0 - vx * 14 + Math.cos(a) * 30, y: cy0 - vy * 14 + Math.sin(a) * 30, vx: Math.cos(a) * 30, vy: Math.sin(a) * 30 - 20, t: 0, life: 0.4 + Math.random() * 0.2, c: trailColor(wr, T + q * 0.15), r: 2.6 + (wr - 3) }); }
       for (const m of mobs) if (!m.dead && Math.hypot(m.x - cx0, m.y - 18 - cy0) < ab.range) hitMob(m, ab, dmg);
       break;
     }
@@ -3720,7 +3737,7 @@ function use(i) {
       ts.forEach((t, k) => {
         const tx = t ? t.x : hero.x + vx * rng, ty = t ? t.y - 22 : hero.y - 40 + vy * rng;
         const sx = hero.x + vx * 20, sy = hero.y - 46 - k * 6, d = Math.hypot(tx - sx, ty - sy) || 1, sp = ab.speed || 420;
-        shots.push({ dmg, x: sx, y: sy, vx: ((tx - sx) / d) * sp, vy: ((ty - sy) / d) * sp, life: rng / sp + 0.4, ab, c: col, tg: t, arrow: ab.cls === 'cazador' && !ab.big ? (hero.weapon.kind === 'rifle' ? 'bala' : 'flecha') : null });
+        shots.push({ dmg, x: sx, y: sy, vx: ((tx - sx) / d) * sp, vy: ((ty - sy) / d) * sp, life: rng / sp + 0.4, ab, c: col, tg: t, wr: hero.weapon.rarity, arrow: ab.cls === 'cazador' && !ab.big ? (hero.weapon.kind === 'rifle' ? 'bala' : 'flecha') : null });
       });
       break;
     }
@@ -3846,6 +3863,19 @@ function openClassTrainer(cls, n) {
     hero.gold -= rankPrice(ab); hero.abil.known[ab.id]++;
     toast(`⭐ <b>${ab.name}</b> sube a rango ${hero.abil.known[ab.id]}`); save(); openClassTrainer(cls, n);
   });
+}
+
+/* --------------------------------------------- estela de las armas épicas o mejores */
+function weaponTrail(dt, moving) {
+  if (!hero || hero.dead) return;
+  const wr = Math.max(hero.weapon.rarity || 0, hero.offhand && hasDual() ? hero.offhand.rarity : 0);
+  if (wr < 3) return;
+  if ((hero.trT = (hero.trT || 0) - dt) > 0) return;
+  hero.trT = moving || hero.atkT > 0 ? 0.025 : 0.09;
+  const up = hero.mounted ? 42 : 0;
+  const pts = hero.dir === 2 ? [[(hero.flip ? -1 : 1) * 24, -78]] : hero.dir === 1 ? [[-17, -70]] : [[22, -76]];
+  if (hero.offhand && hasDual() && hero.dir !== 2) pts.push(hero.dir === 1 ? [17, -64] : [-22, -66]);
+  for (const [ox, oy] of pts) fx.push({ k: 'tr', x: hero.x + ox + (Math.random() - 0.5) * 8, y: hero.y + oy - up + (Math.random() - 0.5) * 14, vx: (Math.random() - 0.5) * 16 + (moving ? -Math.sign(hero.vx || 0) * 30 : 0), vy: -14 - Math.random() * 18, t: 0, life: 0.5 + (wr - 3) * 0.15, c: trailColor(wr, T + Math.random()), r: 2.4 + (wr - 3) * 0.9 });
 }
 
 'use strict';

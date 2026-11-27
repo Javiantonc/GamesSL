@@ -313,8 +313,8 @@ function armFront(s, W, bob, sw, atk, noGlove) {
   toon((k) => { k.moveTo(sx - 4.5 * s, sy - 1); k.quadraticCurveTo(ex + 4 * s, ey - 4, hx + 4 * s, hy); k.lineTo(hx - 4 * s, hy + 1); k.quadraticCurveTo(ex - 3 * s, ey + 2, sx - 3 * s, sy + 6); k.closePath(); }, W.sleeve, { sx: -1.5, sy: 0 });
   if (!noGlove) toon(E(hx, hy + 1, 5, 4.8), W.glove);
 }
-const TRIMC = [null, '#d8dce4', '#e8c060', '#e8c060', '#ffc040'];
-const GEMC = [null, null, '#5aa0ff', '#c070ff', '#ffa53a'];
+const TRIMC = [null, '#d8dce4', '#e8c060', '#e8c060', '#ffc040', '#ffd060'];
+const GEMC = [null, null, '#3d9bff', '#b45cff', '#ff9a1f', '#ff3d6e'];
 /** Adornos que dependen de la calidad de cada pieza (rareza 0-4). */
 function chestDeco(L, W, t, b) {
   const r = L.chestR || 0; if (!r) return;
@@ -333,7 +333,7 @@ function helmDeco(L, hy, side) {
   const r = L.helmR || 0; if (r < 2) return;
   const s = side ? 3 : 0;
   if (L.hat === 'helm' || L.hat === 'coif') {
-    const pc = r >= 4 ? '#ffb040' : r >= 3 ? '#c070ff' : '#d9402e';
+    const pc = r >= 5 ? '#ff3d6e' : r >= 4 ? '#ffb040' : r >= 3 ? '#b45cff' : '#d9402e';
     toon((k) => { k.moveTo(-3 + s, hy - 22); k.quadraticCurveTo(side ? -14 : 2, hy - 44, side ? -16 : 14, hy - 40); k.quadraticCurveTo(side ? -6 : 8, hy - 32, 3 + s, hy - 22); k.closePath(); }, pc, { sx: -1.5, sy: 0, lw: 2 });
     if (r >= 3 && !side) for (const q of [-1, 1]) toon((k) => { k.moveTo(q * 15, hy - 14); k.quadraticCurveTo(q * 28, hy - 22, q * 26, hy - 36); k.quadraticCurveTo(q * 22, hy - 24, q * 12, hy - 20); k.closePath(); }, '#efe8d8', { sx: -1, sy: 0, lw: 2 });
   } else if (L.hat === 'hood' || L.hat === 'wizard') {

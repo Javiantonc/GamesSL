@@ -45,7 +45,8 @@ function onBossKilled(m) {
     m.loot.push({ kind: 'gold', n: (first ? 40 : 15) + P.lvl * (first ? 12 : 5) });
     // el jefe siempre suelta un arma épica (o legendaria) y dos piezas de armadura muy buenas
     const legend = Math.random() < (first ? 0.35 : 0.12);
-    m.loot.push({ kind: 'weapon', w: makeWeapon(hero.cls, P.lvl + 2, legend ? 4 : 3) });
+    const ultra = Math.random() < (first ? 0.04 + P.i * 0.012 : 0.02);   // las mazmorras más difíciles pueden dar ultralegendarias
+    m.loot.push({ kind: 'weapon', w: makeWeapon(hero.cls, P.lvl + 2, ultra ? 5 : legend ? 4 : 3) });
     m.loot.push({ kind: 'gear', g: makeGear(hero.cls, P.lvl + 2, 3) });
     m.loot.push({ kind: 'gear', g: makeGear(hero.cls, P.lvl + 2, first && Math.random() < 0.3 ? 4 : Math.random() < 0.5 ? 3 : 2) });
     m.loot.push({ kind: 'potion', icon: '🧪', name: 'Poción de vida', n: 2 });

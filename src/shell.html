@@ -114,7 +114,7 @@
   .gslot { position: relative; width: 54px; height: 54px; padding: 0; background: #1a120c; border: 2px solid #4a3424; border-radius: 6px; color: #fff; display: flex; align-items: center; justify-content: center; }
   .gslot img { width: 46px; height: 46px; } .gslot span { font-size: 22px; opacity: .35; }
   .gslot small { position: absolute; bottom: -1px; left: 0; right: 0; font-size: 8px; color: #c8b898; text-shadow: 0 1px 0 #000; }
-  .gslot.r1 { border-color: #7ad85a; } .gslot.r2 { border-color: #5aa0ff; } .gslot.r3 { border-color: #c070ff; } .gslot.r4 { border-color: #ffa53a; } .gslot.r0 { border-color: #a8a290; }
+  .gslot.r0 { border-color: #a8a8a8; } .gslot.r1 { border-color: #4ee44e; } .gslot.r2 { border-color: #3d9bff; } .gslot.r3 { border-color: #b45cff; box-shadow: 0 0 8px #b45cff; } .gslot.r4 { border-color: #ff9a1f; box-shadow: 0 0 10px #ff9a1f; } .gslot.r5 { border-color: #ff3d6e; animation: ultra 2s linear infinite; }
   .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 13px; margin-top: 8px; } .stats b { color: #ffd27a; }
   .wrow .ghost + .ghost { margin-left: 2px; }
   .slot .empty { opacity: .35; }
@@ -131,7 +131,8 @@
   .bnote { grid-column: span 3; font-size: 11px; color: #c8b898; }
   .bcell { position: relative; aspect-ratio: 1; min-width: 0; padding: 0; background: radial-gradient(#3a2818, #1a120c); border: 2px solid #4a3424; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; }
   .bcell img { width: 88%; height: 88%; } .bcell.vacio { background: #120c08; border-style: dashed; border-color: #3a2a1c; }
-  .bcell.r0 { border-color: #a8a290; } .bcell.r1 { border-color: #7ad85a; } .bcell.r2 { border-color: #5aa0ff; } .bcell.r3 { border-color: #c070ff; box-shadow: inset 0 0 8px #c070ff88; } .bcell.r4 { border-color: #ffa53a; box-shadow: inset 0 0 10px #ffa53a99; }
+  .bcell.r0 { border-color: #a8a8a8; } .bcell.r1 { border-color: #4ee44e; } .bcell.r2 { border-color: #3d9bff; } .bcell.r3 { border-color: #b45cff; box-shadow: inset 0 0 8px #b45cff88, 0 0 6px #b45cff; } .bcell.r4 { border-color: #ff9a1f; box-shadow: inset 0 0 10px #ff9a1f99, 0 0 8px #ff9a1f; } .bcell.r5 { border-color: #ff3d6e; animation: ultra 2s linear infinite; }
+  @keyframes ultra { 0% { border-color: #ff3d6e; box-shadow: 0 0 10px #ff3d6e, inset 0 0 10px #ff3d6e88; } 33% { border-color: #ffd23d; box-shadow: 0 0 10px #ffd23d, inset 0 0 10px #ffd23d88; } 66% { border-color: #3dd8ff; box-shadow: 0 0 10px #3dd8ff, inset 0 0 10px #3dd8ff88; } 100% { border-color: #ff3d6e; box-shadow: 0 0 10px #ff3d6e, inset 0 0 10px #ff3d6e88; } }
   .bcell.st { border-color: var(--c); } .bcell.st span { font-size: 24px; }
   .bcell b { position: absolute; right: 3px; bottom: 0; font-size: 12px; text-shadow: 0 1px 0 #000, 0 0 3px #000; }
   .bcell small { position: absolute; bottom: -1px; left: 0; right: 0; font-size: 8px; color: #ffd27a; text-shadow: 0 1px 0 #000; }
@@ -139,7 +140,7 @@
   .bcell.on { outline: 3px solid #fff; outline-offset: 1px; }
   .binfo { margin-top: 10px; background: #1a120c; border: 2px solid #6b4a22; border-radius: 8px; padding: 8px 10px; font-size: 13px; }
   .binfo.empty { color: #c8b898; text-align: center; font-size: 12px; }
-  .binfo.r1 { border-color: #7ad85a; } .binfo.r2 { border-color: #5aa0ff; } .binfo.r3 { border-color: #c070ff; } .binfo.r4 { border-color: #ffa53a; }
+  .binfo.r1 { border-color: #4ee44e; } .binfo.r2 { border-color: #3d9bff; } .binfo.r3 { border-color: #b45cff; } .binfo.r4 { border-color: #ff9a1f; } .binfo.r5 { border-color: #ff3d6e; animation: ultra 2s linear infinite; }
   .binfo .bh { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; } .binfo .bh img { width: 48px; height: 48px; } .binfo .bh .bi { font-size: 34px; width: 48px; text-align: center; }
   .binfo .bh b { display: block; font-size: 15px; } .binfo small { display: block; color: #c8b898; font-size: 12px; }
   .binfo p { margin: 6px 0; line-height: 1.35; } .binfo .sub { font-size: 12px; color: #c8b898; }
