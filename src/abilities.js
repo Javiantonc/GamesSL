@@ -199,7 +199,7 @@ function use(i) {
   const target = nearestMob(['bolt', 'multi', 'charge', 'meteor', 'ground'].includes(ab.kind) ? rng : ab.kind === 'melee' ? 190 : 140);
   if ((ab.kind === 'charge' || ab.kind === 'meteor' || (ab.kind === 'ground' && !ab.self)) && !target) { toast(`${ab.icon} ${ab.name}: no hay ningún enemigo a tu alcance`); return; }
   hero.cd[id] = T + cdOf(ab);
-  hero.atkT = 0.22; pressSlot(i);
+  hero.atkT = 0.22; hero.lastAtk = T; pressSlot(i);
   let mult = 1;
   if (hero.stealth > T && ab.dmg) { mult = hero.stealthMult; hero.stealth = 0; }
   if (target && !['nova', 'heal', 'shield', 'buff', 'stealth', 'blink'].includes(ab.kind)) faceTo(target.x, target.y);

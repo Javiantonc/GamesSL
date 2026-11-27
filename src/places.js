@@ -163,7 +163,7 @@ function buildDungeon(P) {
     if (k < n - 1) {
       const ny = 250 + r() * 1000, nx = x + w + 120 + r() * 80;
       const cy1 = R.y + R.h / 2, cx2 = nx + 60;
-      rects.push({ x: x + w - 20, y: cy1 - 50, w: cx2 - x - w + 70, h: 100, cor: true });
+      rects.push({ x: x + w - 70, y: cy1 - 50, w: cx2 - x - w + 120, h: 100, cor: true });
       const ty = clamp(ny, 160, S.H - 200);
       rects.push({ x: cx2 - 50, y: Math.min(cy1, ty) - 50, w: 100, h: Math.abs(ty - cy1) + 100, cor: true });
       x = nx; y = ty;

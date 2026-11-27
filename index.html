@@ -152,6 +152,8 @@
     .bwrap .binfo { margin-top: 0; position: sticky; top: 0; }
     .bgrid { grid-template-columns: repeat(8, 1fr); }
   }
+  #h-hp.regen i { background: linear-gradient(#9dff8a, #3fae3a); animation: regpulse 1s ease-in-out infinite; }
+  @keyframes regpulse { 50% { filter: brightness(1.35); } }
   .prof { border-bottom: 2px solid #4a3424; padding-bottom: 6px; margin-bottom: 6px; }
   #mapwin { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: #000a; z-index: 14; }
   #mapwin.open { display: flex; } #mapwin canvas { width: min(94vw, 141vh); height: auto; aspect-ratio: 3 / 2; border: 4px solid #c89a4a; border-radius: 8px; box-shadow: 0 0 0 3px #120c08; }
@@ -1708,7 +1710,7 @@ function buildDungeon(P) {
     if (k < n - 1) {
       const ny = 250 + r() * 1000, nx = x + w + 120 + r() * 80;
       const cy1 = R.y + R.h / 2, cx2 = nx + 60;
-      rects.push({ x: x + w - 20, y: cy1 - 50, w: cx2 - x - w + 70, h: 100, cor: true });
+      rects.push({ x: x + w - 70, y: cy1 - 50, w: cx2 - x - w + 120, h: 100, cor: true });
       const ty = clamp(ny, 160, S.H - 200);
       rects.push({ x: cx2 - 50, y: Math.min(cy1, ty) - 50, w: 100, h: Math.abs(ty - cy1) + 100, cor: true });
       x = nx; y = ty;
@@ -1991,7 +1993,19 @@ function update(dt) {
   hero.atkT -= dt; hero.hurt -= dt; hero.spin = Math.max(0, (hero.spin || 0) - dt);
   if (hero.regen && T < hero.regen.until && !hero.dead) hero.hp = Math.min(hero.max, hero.hp + hero.regen.per * dt);
   if (hero.buff && T > hero.buff.until) { hero.buff = null; recalc(); toast('Ya no estás bien alimentado'); }
-  if (T - (hero.lastHit || -99) > 5 && !hero.dead) hero.hp = Math.min(hero.max, hero.hp + hero.max * 0.04 * dt);
+  // fuera de combate la vida se regenera poco a poco
+  hero.inCombat = T - (hero.lastHit || -99) < 4 || T - (hero.lastAtk || -99) < 4 || mobs.some((m) => !m.dead && m.state === 'chase' && Math.abs(m.x - hero.x) + Math.abs(m.y - hero.y) < 700);
+  if (!hero.inCombat && !hero.dead && hero.hp < hero.max) {
+    const before = Math.floor(hero.hp);
+    hero.hp = Math.min(hero.max, hero.hp + hero.max * 0.06 * dt);
+    hero.regAcc = (hero.regAcc || 0) + (hero.hp - before);
+    if ((hero.regT = (hero.regT || 0) - dt) < 0) {
+      hero.regT = 1;
+      if (hero.regAcc >= 1) nums.push({ x: hero.x + 18, y: hero.y - 110, t: 0, txt: `+${Math.round(hero.regAcc)}`, c: '#7dff7a' });
+      hero.regAcc = 0;
+      for (let k = 0; k < 3; k++) fx.push({ k: 'p', x: hero.x + (Math.random() - 0.5) * 34, y: hero.y - 20 - Math.random() * 50, vx: 0, vy: -60, t: 0, life: 0.7, c: '#7dff7a' });
+    }
+  }
 
   updateWorldStuff(dt); updateZones(dt);
   for (const m of mobs) {
@@ -2262,7 +2276,8 @@ function hud() {
   potBtn.style.opacity = hero.potions ? 1 : 0.4;
   if (lootOf && Math.hypot(lootOf.x - hero.x, lootOf.y - hero.y) > 120) closeLoot();
   const hp = document.getElementById('h-hp'), xp = document.getElementById('h-xp');
-  hp.querySelector('i').style.width = `${(hero.hp / hero.max) * 100}%`; hp.querySelector('span').textContent = `${Math.ceil(hero.hp)} / ${hero.max}`;
+  hp.querySelector('i').style.width = `${(hero.hp / hero.max) * 100}%`; hp.querySelector('span').textContent = `${Math.ceil(hero.hp)} / ${hero.max}${!hero.inCombat && hero.hp < hero.max ? ' ✚' : ''}`;
+  hp.classList.toggle('regen', !hero.inCombat && hero.hp < hero.max);
   xp.querySelector('i').style.width = `${(hero.xp / xpNeed(hero.lvl)) * 100}%`; xp.querySelector('span').textContent = `Nivel ${hero.lvl} · ${hero.xp}/${xpNeed(hero.lvl)} XP`;
   for (const b of bar2.querySelectorAll('.slot[data-s]')) {
     const id = hero.abil.bar[+b.dataset.s]; if (!id) continue;
@@ -3468,7 +3483,7 @@ function use(i) {
   const target = nearestMob(['bolt', 'multi', 'charge', 'meteor', 'ground'].includes(ab.kind) ? rng : ab.kind === 'melee' ? 190 : 140);
   if ((ab.kind === 'charge' || ab.kind === 'meteor' || (ab.kind === 'ground' && !ab.self)) && !target) { toast(`${ab.icon} ${ab.name}: no hay ningún enemigo a tu alcance`); return; }
   hero.cd[id] = T + cdOf(ab);
-  hero.atkT = 0.22; pressSlot(i);
+  hero.atkT = 0.22; hero.lastAtk = T; pressSlot(i);
   let mult = 1;
   if (hero.stealth > T && ab.dmg) { mult = hero.stealthMult; hero.stealth = 0; }
   if (target && !['nova', 'heal', 'shield', 'buff', 'stealth', 'blink'].includes(ab.kind)) faceTo(target.x, target.y);

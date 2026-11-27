@@ -231,7 +231,19 @@ function update(dt) {
   hero.atkT -= dt; hero.hurt -= dt; hero.spin = Math.max(0, (hero.spin || 0) - dt);
   if (hero.regen && T < hero.regen.until && !hero.dead) hero.hp = Math.min(hero.max, hero.hp + hero.regen.per * dt);
   if (hero.buff && T > hero.buff.until) { hero.buff = null; recalc(); toast('Ya no estás bien alimentado'); }
-  if (T - (hero.lastHit || -99) > 5 && !hero.dead) hero.hp = Math.min(hero.max, hero.hp + hero.max * 0.04 * dt);
+  // fuera de combate la vida se regenera poco a poco
+  hero.inCombat = T - (hero.lastHit || -99) < 4 || T - (hero.lastAtk || -99) < 4 || mobs.some((m) => !m.dead && m.state === 'chase' && Math.abs(m.x - hero.x) + Math.abs(m.y - hero.y) < 700);
+  if (!hero.inCombat && !hero.dead && hero.hp < hero.max) {
+    const before = Math.floor(hero.hp);
+    hero.hp = Math.min(hero.max, hero.hp + hero.max * 0.06 * dt);
+    hero.regAcc = (hero.regAcc || 0) + (hero.hp - before);
+    if ((hero.regT = (hero.regT || 0) - dt) < 0) {
+      hero.regT = 1;
+      if (hero.regAcc >= 1) nums.push({ x: hero.x + 18, y: hero.y - 110, t: 0, txt: `+${Math.round(hero.regAcc)}`, c: '#7dff7a' });
+      hero.regAcc = 0;
+      for (let k = 0; k < 3; k++) fx.push({ k: 'p', x: hero.x + (Math.random() - 0.5) * 34, y: hero.y - 20 - Math.random() * 50, vx: 0, vy: -60, t: 0, life: 0.7, c: '#7dff7a' });
+    }
+  }
 
   updateWorldStuff(dt); updateZones(dt);
   for (const m of mobs) {
@@ -502,7 +514,8 @@ function hud() {
   potBtn.style.opacity = hero.potions ? 1 : 0.4;
   if (lootOf && Math.hypot(lootOf.x - hero.x, lootOf.y - hero.y) > 120) closeLoot();
   const hp = document.getElementById('h-hp'), xp = document.getElementById('h-xp');
-  hp.querySelector('i').style.width = `${(hero.hp / hero.max) * 100}%`; hp.querySelector('span').textContent = `${Math.ceil(hero.hp)} / ${hero.max}`;
+  hp.querySelector('i').style.width = `${(hero.hp / hero.max) * 100}%`; hp.querySelector('span').textContent = `${Math.ceil(hero.hp)} / ${hero.max}${!hero.inCombat && hero.hp < hero.max ? ' ✚' : ''}`;
+  hp.classList.toggle('regen', !hero.inCombat && hero.hp < hero.max);
   xp.querySelector('i').style.width = `${(hero.xp / xpNeed(hero.lvl)) * 100}%`; xp.querySelector('span').textContent = `Nivel ${hero.lvl} · ${hero.xp}/${xpNeed(hero.lvl)} XP`;
   for (const b of bar2.querySelectorAll('.slot[data-s]')) {
     const id = hero.abil.bar[+b.dataset.s]; if (!id) continue;
